@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.declic.app"
+      "bundleIdentifier": "com.declic.party"
     },
     "android": {
       "adaptiveIcon": {

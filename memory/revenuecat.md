@@ -7,7 +7,8 @@ This file serves as memory for interacting with the user's RevenueCat account vi
 - play_app_id: app63ff9f421a
 - entitlement_lookup_key: pro
 - offering_lookup_key: default
-- bundle_id / package_name: com.declic.app
+- bundle_id (iOS): com.declic.party
+- package_name (Android): com.declic.app
 - Packages (package -> product_id, current price):
   - $rc_monthly -> prod2e32f41e3f   ($9.99 / P1M, trial: none)
   - $rc_annual  -> prodd9a63109d4   ($79.99 / P1Y, trial: none)
