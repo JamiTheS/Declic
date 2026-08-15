@@ -52,7 +52,10 @@ type AppCtx = {
   soundEnabled: boolean;
   setSoundEnabled: (v: boolean) => void;
 
-  isPremium: boolean; // derived from RevenueCat "pro" entitlement
+  isPremium: boolean; // RevenueCat "pro" entitlement OR local test unlock
+  testUnlockEnabled: boolean; // whether the "test unlock" toggle is exposed
+  testUnlock: boolean;
+  setTestUnlock: (v: boolean) => void;
 
   stats: SessionStats;
   startSession: (mode: string, packLabel?: string | null) => void;
@@ -72,7 +75,13 @@ const K = {
   ambiance: "declic.ambiance",
   haptics: "declic.haptics",
   sound: "declic.sound",
+  testUnlock: "declic.testUnlock",
 };
+
+// When true, Settings exposes a "Débloquer Premium (test)" toggle so TestFlight
+// / internal testers can access premium content without a real purchase.
+// Set EXPO_PUBLIC_ENABLE_TEST_UNLOCK=false before the final App Store build.
+const TEST_UNLOCK_ENABLED = process.env.EXPO_PUBLIC_ENABLE_TEST_UNLOCK === "true";
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -82,21 +91,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ambiance, setAmbianceState] = useState<Ambiance>("standard");
   const [haptics, setHapticsState] = useState(true);
   const [soundEnabled, setSoundEnabledState] = useState(false);
+  const [testUnlock, setTestUnlockState] = useState(false);
   const [stats, setStats] = useState<SessionStats>(emptyStats());
 
   // Premium status is owned by RevenueCat — the "pro" entitlement is the single
-  // source of truth. No local flag, no simulated grant.
-  const { isSubscribed: isPremium } = useSubscription();
+  // source of truth. In test builds, a local unlock flag can also grant premium
+  // so testers can exercise premium content without a live store purchase.
+  const { isSubscribed } = useSubscription();
+  const isPremium = isSubscribed || (TEST_UNLOCK_ENABLED && testUnlock);
 
   useEffect(() => {
     (async () => {
-      const [age, savedPlayers, sober, amb, hap, snd] = await Promise.all([
+      const [age, savedPlayers, sober, amb, hap, snd, tu] = await Promise.all([
         storage.getItem(K.age, false),
         storage.getItem(K.players, "[]"),
         storage.getItem(K.sober, false),
         storage.getItem(K.ambiance, "standard"),
         storage.getItem(K.haptics, true),
         storage.getItem(K.sound, false),
+        storage.getItem(K.testUnlock, false),
       ]);
       setAgeVerified(!!age);
       try {
@@ -107,6 +120,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (amb === "chill" || amb === "standard" || amb === "chaud") setAmbianceState(amb);
       setHapticsState(hap === null ? true : !!hap);
       setSoundEnabledState(!!snd);
+      setTestUnlockState(!!tu);
       setReady(true);
     })();
   }, []);
