@@ -18,7 +18,7 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.declic.app",
+      "package": "com.declic.party",
       "googleServicesFile": "./google-services.json"
     },
     "web": {
