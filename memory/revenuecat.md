@@ -1,54 +1,48 @@
-# RevenueCat — integrated (15 août 2026)
-Ce fichier sert de mémoire pour interagir avec le compte RevenueCat de l'utilisateur via l'integration proxy à tout moment ultérieur.
+# RevenueCat — integrated (2026-08-15)
+This file serves as memory for interacting with the user's RevenueCat account via the integration proxy later.
 
-## État actuel
-- connection_state: **connected** / project_state: **connected** (15/08/2026).
-- Projet RevenueCat provisionné via /setup. Entitlement `pro` avec produits attachés (vérifié).
-- Clés SDK réelles écrites dans frontend/.env (TEST/IOS/ANDROID). Ne jamais y mettre de placeholder ni de valeur vide.
-- Code app-side entièrement branché : src/lib/revenuecat.tsx (init module-scope, SubscriptionProvider, useSubscription), app/_layout.tsx, paywall.tsx, settings.tsx (Customer Center), revenuecatUI.ts (paywall natif RC + fallback codé).
-
-## Identifiers (réponse /setup — verbatim)
-- rc_project_id: projaddfb47a
-- apple_app_id: appb50ff043e8
-- play_app_id: appdf2a8d889f
+## Identifiers (from /setup response — verbatim)
+- rc_project_id: projc82d42e0
+- apple_app_id: appeb21051f8a
+- play_app_id: app63ff9f421a
 - entitlement_lookup_key: pro
 - offering_lookup_key: default
-- Packages (package -> product_id, prix courant) :
-  - $rc_weekly  -> prodb9a79a1b9d  (5,39 € / P1W, essai: P3D — 3 jours gratuits)
-  - $rc_monthly -> prod76d09802c9  (19,99 € / P1M, essai: P3D)
-  - $rc_annual  -> prod619d157617  (39,99 € / P1Y, essai: P3D)
-- NOTE Test Store: le produit test 'pro.weekly' n'a pas de données produit en Browser Mode (préversion) -> le plan Hebdo ne s'affiche pas en preview et les prix affichés sont les défauts USD du Test Store. Les prix EUR + essai + hebdo s'appliqueront sur les vrais builds App Store / Play une fois les produits IAP créés côté store.
-- Dashboard: https://app.revenuecat.com/projects/projaddfb47a
+- bundle_id / package_name: com.declic.app
+- Packages (package -> product_id, current price):
+  - $rc_monthly -> prod2e32f41e3f   ($9.99 / P1M, trial: none)
+  - $rc_annual  -> prodd9a63109d4   ($79.99 / P1Y, trial: none)
+- Dashboard: https://app.revenuecat.com/projects/projc82d42e0
 
-## Identifiants app
-- bundle_id / package_name: com.declic.app  (changé le 15/08/2026, ex-com.emergent.helloworld.ic89as)
-- slug / scheme: declic
-- Projet integration proxy: a4472f55-b2e5-40a8-bec6-580b7ae63e41
-- Re-provisionné via /setup avec com.declic.app : clés SDK INCHANGÉES (liées au projet RevenueCat, pas au bundle id) -> frontend/.env reste valide.
+SDK keys live in frontend/.env only (EXPO_PUBLIC_REVENUECAT_TEST/IOS/ANDROID_API_KEY) — NOT stored here.
 
-## Statut (vérif ultérieure). Si project_state < project_created, re-fetch le playbook via integration_expert.
-```bash
-AUTH='Authorization: Bearer <emergent_key>'   # fournie inline par la plateforme, ne jamais stocker
-curl -sS -H "$AUTH" "$INTEGRATION_PROXY_URL/internal/revenuecat/projects/a4472f55-b2e5-40a8-bec6-580b7ae63e41/status"
+## Status check
+If project_state is less than project_created, re-fetch the RevenueCat playbook via the integration expert tool.
 ```
+AUTH='Authorization: Bearer <emergent key — pre-substituted by platform>'
+curl -sS -H "$AUTH" "$INTEGRATION_PROXY_URL/internal/revenuecat/projects/031a1b09-1196-4e50-8ab6-7291d0f9f0f8/status"
+```
+Last status (2026-08-15): connection_state=connected, project_state=connected.
 
-## Mises à jour produits (APIs integration proxy UNIQUEMENT — JAMAIS l'API REST RevenueCat)
-- Changer prix/durée/essai OU ajouter un package (upsert) :
-  POST $INTEGRATION_PROXY_URL/internal/revenuecat/projects/a4472f55-b2e5-40a8-bec6-580b7ae63e41/products
-  body: {"products":[{"package":"$rc_monthly","price":8.99,"currency":"EUR","period":"P1M","trial":"P3D","prices":[{"amount_micros":8990000,"currency":"EUR"}]}]}
-  (amount_micros = price × 1 000 000 ; omettre "trial" si aucun)
-- Supprimer un package :
-  DELETE $INTEGRATION_PROXY_URL/internal/revenuecat/projects/a4472f55-b2e5-40a8-bec6-580b7ae63e41/products/%24rc_monthly  ($ -> %24)
-- Récupérer les identifiants / repeupler .env : relancer le /setup idempotent.
+## Later product updates (integration proxy APIs ONLY — NEVER call the RevenueCat REST API)
+- Change price/duration/trial OR add a package (upsert):
+  POST $INTEGRATION_PROXY_URL/internal/revenuecat/projects/031a1b09-1196-4e50-8ab6-7291d0f9f0f8/products
+  body: {"products":[{"package":"$rc_monthly","price":14.99,"currency":"USD","period":"P1M","trial":"P1W","prices":[{"amount_micros":14990000,"currency":"USD"}]}]}
+  (amount_micros = price × 1,000,000; omit "trial" for none)
+- Remove a package:
+  DELETE $INTEGRATION_PROXY_URL/internal/revenuecat/projects/031a1b09-1196-4e50-8ab6-7291d0f9f0f8/products/%24rc_monthly  ($ -> %24)
+- Recover identifiers / repopulate .env: re-run the idempotent /setup call.
 
-## Règle produit demandée par l'utilisateur
-- Essai gratuit 3 jours puis mensuel auto (trial P3D sur $rc_monthly). Fait.
-- Le paywall ne s'affiche QUE au tap sur un pack premium verrouillé (hub/launch/settings), jamais entre les manches.
+## App code map (already implemented, playbook-aligned)
+- src/lib/revenuecat.tsx — SubscriptionProvider + useSubscription (init at module scope, logIn with persisted device id, customer-info listener, purchase w/ anonymous guard, restore, isSubscribed on "pro").
+- src/lib/revenuecatUI.ts — web-safe wrapper for RevenueCat-hosted Paywall + Customer Center (native only).
+- app/paywall.tsx — coded paywall (dynamic packages/prices), Restore button, identity gating, unavailable state, test-purchase confirmation modal.
+- app/_layout.tsx — initializeRevenueCat() at module scope + <SubscriptionProvider>.
+- src/context/AppContext.tsx — isPremium = isSubscribed (RC entitlement is sole source of truth; no backend pro flags).
 
-## Passage en LIVE — étapes store (l'UTILISATEUR fait ces étapes — l'agent ne peut ni les faire ni les vérifier)
-Nécessaire UNIQUEMENT pour les vrais achats en build publié. Le Test Store (Expo Go / web preview / dev build) n'en a pas besoin.
-- Uploader les credentials App Store Connect (.p8) et Google Play (service-account JSON) dans le dashboard RevenueCat.
-- Configurer les profils de paiement (App Store Connect + Play Console).
-- Créer les produits IAP avec les MÊMES product ids que le dashboard RevenueCat.
-- Build release, tester via TestFlight / test interne Play, puis soumettre.
-Toutes ces étapes figurent dans la section FAQ du panneau Payments.
+## Taking purchases LIVE — store-side steps (USER does these; Emergent cannot)
+Needed ONLY for REAL purchases in published store builds; Test Store (Expo Go / web / dev build) needs none.
+1. Upload store credentials to the RevenueCat dashboard: iOS App Store Connect API key (.p8) + Google Play service-account JSON.
+2. Set up payment profiles in App Store Connect and Play Console.
+3. Create matching IAP products with the SAME product IDs shown in the RevenueCat dashboard (monthly / annual).
+4. Make a release build, test via TestFlight / Play internal testing, then submit for review.
+All steps are also documented in the FAQ section of the Emergent payments panel.

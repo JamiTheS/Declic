@@ -1,0 +1,32 @@
+{
+  "summary": "RevenueCat Test Store integration verified end-to-end via web preview on the public URL. All 6 acceptance criteria PASS. (1) /paywall loads dynamic offerings from the Test Store: plan-monthly renders 'Mensuel · Sans engagement · $9.99', plan-annual renders 'Annuel · $79.99 · MEILLEURE OFFRE · Économise 33% vs mensuel' — prices come from the SDK (product.priceString), NOT hardcoded. paywall-sim-note, restore-button, subscribe-button all present; paywall-unavailable is correctly absent. (2) Premium gating works: from /hub, tapping mode-le-verdict (also mode-tu-me-connais, mode-hot are marked premium in hub.tsx) while not subscribed routes to /paywall without starting the game. (3) Simulated purchase flow completes end-to-end: subscribe-button -> paywall-confirm-modal appears (because simulatedStore=true) -> confirm-purchase-button fires Purchases.purchasePackage against the RC Test Store. The purchases-js SDK then renders its OWN sandbox overlay ('Test Store Purchase' with 'Test valid purchase' / 'Test failed purchase' / 'Cancel'). On 'Test valid purchase' the 'pro' entitlement activates on-device and the coded paywall auto-closes within ~1s back to /hub. Console log confirms: '[Test store] Performing test purchase. This purchase won't appear in production.' — no RC error, no CustomerInfo error. (4) After successful purchase, isPremium becomes true from the 'pro' entitlement: tapping mode-le-verdict now launches /game?mode=le-verdict (verified in URL), paywall does NOT reappear. (5) restore-button ('Restaurer mes achats') invokes Purchases.restorePurchases without crashing and no paywall-error is shown. (6) NON-REGRESSION verified: age-gate (age-yes-button) -> /setup -> add 2 players (Alice + Bob) -> start-button -> /hub; free mode mode-je-nai-jamais launches /game?mode=je-nai-jamais and renders cards; mode-confession routes to /confessions as designed. No red screen, no page errors. Note: On web the RC purchases-js Test Store shows an EXTRA sandbox dialog after confirm-purchase-button — this is expected purchases-js behavior, not a bug; native builds skip this and go straight to the App Store / Play Store sheet.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_3.json"
+  ],
+  "action_items": [
+    "None required. The RevenueCat Test Store integration works exactly as designed on web preview. All acceptance criteria pass and non-regression is green."
+  ],
+  "critical_code_review_comments": [
+    "revenuecat.tsx: isSubscribed correctly considers ANY active entitlement in addition to the configured 'pro' key — robust to a dashboard rename. Good defensive design.",
+    "revenuecat.tsx: purchaseMutation writes fresh CustomerInfo to queryClient cache in onSuccess (not just relying on addCustomerInfoUpdateListener, which is not guaranteed to fire in Browser Mode). Correct for Test Store on web.",
+    "revenuecat.tsx: identity is stabilised via getInstallId() persisted in storage + Purchases.logIn, then guarded in purchaseMutation (throws 'identity_not_ready' if still anonymous). paywall.tsx surfaces this as a friendly French message. Good.",
+    "paywall.tsx: simulatedStore branch shows an explicit confirmation modal before firing the test purchase — prevents accidental test-store spend and matches the review request.",
+    "paywall.tsx: auto-close on isSubscribed uses router.canGoBack() with router.replace('/hub') fallback — works whether the paywall was pushed from hub or opened directly. Verified: back to /hub in ~1s.",
+    "hub.tsx: PREMIUM_MODES = ['le-verdict','tu-me-connais','hot'] with early return to /paywall in launchMode when !isPremium. Confessions correctly bypasses gating via ROUTED_MODES.",
+    "AppContext.tsx: isPremium is derived SOLELY from useSubscription().isSubscribed (RC 'pro' entitlement). No local flag, no backend flag. Matches the stated design."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only run per request)", "frontend": "100% (all 6 acceptance criteria pass)"},
+  "seed_data_creation": "None. RC Test Store 'pro' entitlement is activated on-device for the anonymous install id — no backend seed required.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Public URL: https://dev-emergent-lab.preview.emergentagent.com. RevenueCat Test Store keys are wired in frontend/.env. Entitlement key = 'pro', offering = 'default' with MONTHLY ($9.99) + ANNUAL ($79.99). IMPORTANT for future runs on web: after tapping [data-testid=\"confirm-purchase-button\"] the RC purchases-js SDK renders an EXTRA sandbox overlay (not an iframe — rendered in main frame) with the text 'Test valid purchase' — you MUST click that to actually complete the purchase and activate the 'pro' entitlement. Otherwise the paywall will appear 'stuck' but is in fact just awaiting the sandbox confirmation. Use: `await page.get_by_text('Test valid purchase').first.click(force=True)`. Console signal confirming a real test purchase: `[Test store] Performing test purchase. This purchase won't appear in production.` Reset flow via localStorage.clear() + reload.",
+  "rca_of_issue": "N/A — no bugs found."
+}

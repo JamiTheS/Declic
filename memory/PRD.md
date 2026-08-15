@@ -145,3 +145,11 @@ d'autres, toujours avec alternative non-alcoolisée (Loi Évin / App Store 1.4.3
 - **Env** : `EMERGENT_PUSH_KEY="placeholder"` ajouté (remplacé auto au déploiement — NE PAS éditer).
 - **Vérifié** : testing agent backend **38/38** (register-push 500 contrôlé attendu en preview car clé placeholder ; broadcast gardé par token ; catalogue 357 intact). App boot OK (web-safe).
 - **Rappel natif** : les push ne marchent QUE sur build réel iOS/Android (pas Expo Go / web). Flux : Publish → Deploy → Generate build (upload compte de service Google JSON + clé APNs .p8 iOS à la génération).
+
+## Session 8 (15 août 2026) — Abonnements RevenueCat (gérés par Emergent)
+- **RevenueCat provisionné** via le proxy d'intégration Emergent (rc_project_id `projc82d42e0`, bundle/package `com.declic.app`). Entitlement `pro`, offering `default`, packages **Mensuel $9.99** + **Annuel $79.99**.
+- Clés SDK (test/ios/android) ajoutées dans `frontend/.env` (`EXPO_PUBLIC_REVENUECAT_*`). Le code produit (revenuecat.tsx, paywall.tsx, revenuecatUI.ts, _layout, AppContext) était déjà conforme au playbook ; seul l'ajout des clés réelles restait.
+- **Vérifié (testing agent, 6/6 PASS)** en preview via Test Store : paywall charge les offres dynamiques (prix issus du SDK), gating premium (Le Verdict / Tu me connais / Hot → paywall si non abonné), achat simulé → entitlement `pro` activé → modes premium débloqués, restauration OK, aucune régression (âge → setup → hub, modes gratuits, La Bombe, Confessions).
+- `isPremium` = entitlement `pro` (source unique, aucun flag backend).
+- Détails d'intégration + APIs de mise à jour produit dans `/app/memory/revenuecat.md`.
+- **Pour des achats RÉELS** (build publié) : l'utilisateur doit uploader ses identifiants stores (clé .p8 App Store Connect + JSON service-account Google Play) dans le dashboard RevenueCat et créer les produits IAP avec les mêmes product IDs. Le Test Store (Expo Go / preview / dev build) ne nécessite rien.
