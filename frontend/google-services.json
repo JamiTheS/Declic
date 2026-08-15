@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1057230052921",
+    "project_id": "declic-ae023",
+    "storage_bucket": "declic-ae023.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1057230052921:android:e40e700ef9c20b434677e8",
+        "android_client_info": {
+          "package_name": "com.declic.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjTSQAfTD5MQ-4r3LnWWJemuR4wQ1eCDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,6 +8,7 @@ import csv
 import asyncio
 import logging
 import requests
+import httpx
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -35,6 +36,16 @@ AIRTABLE_URL = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE}
 
 def airtable_configured() -> bool:
     return bool(AIRTABLE_TOKEN and AIRTABLE_BASE_ID and AIRTABLE_TABLE)
+
+# Emergent managed push notifications (SuprSend relay). The key is injected by
+# the deployment pipeline; keep "placeholder" locally so the code path works.
+PUSH_BASE_URL = "https://integrations.emergentagent.com"
+PUSH_KEY = os.environ.get("EMERGENT_PUSH_KEY", "placeholder")
+_push_client = httpx.AsyncClient(
+    base_url=PUSH_BASE_URL,
+    headers={"X-Push-Key": PUSH_KEY},
+    timeout=10.0,
+)
 
 app = FastAPI(title="Déclic API")
 api_router = APIRouter(prefix="/api")
@@ -107,6 +118,18 @@ class CsvImport(BaseModel):
 class AnalyticsEvent(BaseModel):
     name: str
     props: dict = Field(default_factory=dict)
+
+
+class RegisterPushBody(BaseModel):
+    user_id: str
+    platform: str   # "android" | "ios"
+    device_token: str
+
+
+class BroadcastBody(BaseModel):
+    title: str
+    message: str
+    action_url: Optional[str] = None
 
 
 # ----------------------------- Auth -----------------------------
@@ -192,6 +215,72 @@ async def log_event(event: AnalyticsEvent):
     await db.events.insert_one(doc)
     doc.pop("_id", None)
     return {"logged": True}
+
+
+# ----------------------------- Push notifications (Emergent managed) -----------------------------
+
+
+@api_router.post("/register-push", status_code=201)
+async def register_push(body: RegisterPushBody):
+    """Register a device's native push token with the Emergent relay.
+
+    Déclic has no accounts, so `user_id` is a stable per-device id generated on
+    the client. We keep the id (not the token) locally so the owner can
+    broadcast re-engagement pushes. Token resolution is handled by the relay.
+    """
+    resp = await _push_client.post("/api/v1/push/users/register", json=body.model_dump())
+    if resp.status_code == 401:
+        raise HTTPException(500, "EMERGENT_PUSH_KEY missing or invalid")
+    if resp.status_code >= 500:
+        raise HTTPException(502, "Push provider unavailable")
+    resp.raise_for_status()
+    await db.push_users.update_one(
+        {"user_id": body.user_id},
+        {"$set": {"user_id": body.user_id, "platform": body.platform,
+                  "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+    return {"status": "registered"}
+
+
+async def send_push(recipients: List[str], data: dict, idempotency_key: Optional[str] = None) -> None:
+    """Relay a push to a list of user ids (max 100). Never call from web/frontend."""
+    if not recipients:
+        return
+    if len(recipients) > 100:
+        raise ValueError("max 100 recipients per /trigger call; chunk before sending")
+    if "title" not in data or "message" not in data:
+        raise ValueError("data must include title and message")
+    payload: dict = {"recipients": recipients, "data": data}
+    if idempotency_key:
+        payload["$idempotency_key"] = idempotency_key
+    resp = await _push_client.post("/api/v1/push/trigger", json=payload)
+    if resp.status_code == 401:
+        raise HTTPException(500, "EMERGENT_PUSH_KEY missing or invalid")
+    if resp.status_code >= 500:
+        raise HTTPException(502, "Push provider unavailable")
+    resp.raise_for_status()
+
+
+@api_router.post("/admin/broadcast")
+async def admin_broadcast(body: BroadcastBody, _: bool = Depends(require_admin)):
+    """Owner-triggered re-engagement push to every registered device (chunked)."""
+    users = await db.push_users.find({}, {"_id": 0, "user_id": 1}).to_list(100000)
+    ids = [u["user_id"] for u in users if u.get("user_id")]
+    if not ids:
+        return {"sent": 0, "recipients": 0}
+    data = {"title": body.title, "message": body.message}
+    if body.action_url:
+        data["action_url"] = body.action_url
+    sent = 0
+    for i in range(0, len(ids), 100):
+        chunk = ids[i:i + 100]
+        try:
+            await send_push(chunk, data, idempotency_key=f"broadcast-{i}-{body.title[:24]}")
+            sent += len(chunk)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Broadcast chunk failed (non-blocking): %s", e)
+    return {"sent": sent, "recipients": len(ids)}
 
 
 # ----------------------------- Admin (content management) -----------------------------
@@ -606,3 +695,4 @@ async def startup_sync():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+    await _push_client.aclose()

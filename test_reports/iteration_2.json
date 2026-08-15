@@ -1,0 +1,37 @@
+{
+  "summary": "Push-notification endpoints verified against the public URL. 12/12 new tests pass in /app/backend/tests/test_push_notifications.py, plus 26/26 pre-existing tests (test_declic_api.py + test_admin_auth.py) still green (38 passed total). Register-push behavior with EMERGENT_PUSH_KEY=placeholder is exactly as designed: relay returns 401, the endpoint translates it to a clean HTTP 500 with JSON body {\"detail\":\"EMERGENT_PUSH_KEY missing or invalid\"} — no crash, no 502, no stacktrace. Missing/incomplete body -> 422 (Pydantic). /api/admin/broadcast: 401 without header, 401 with wrong token, 200 with X-Admin-Token=declic-admin-2026 returning {sent:0, recipients:0} (no devices registered in preview), accepts optional action_url, 422 when required title/message missing. Non-regression: /api/health returns status ok + catalog_version=3, /api/catalog still returns 357 cards (>=300 assertion passes with margin), /api/admin/verify and /api/admin/summary still respond with the admin token.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "test_airtable_sync.py (collection)", "issue": "Pre-existing test file crashes at collection when EXPO_PUBLIC_BACKEND_URL is not exported in the shell (no default fallback). Not caused by push work; consider aligning with test_declic_api.py which provides a default. Does NOT affect push-notification testing."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_push_notifications.py",
+    "/app/test_reports/pytest/push_results.xml",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "None required for the push feature — behavior in preview matches the intentional design (500 on register-push due to placeholder key). Once the real EMERGENT_PUSH_KEY is injected by the deployer, register-push should return 201 {status:'registered'} and broadcast should count real recipients."
+  ],
+  "critical_code_review_comments": [
+    "register_push maps relay 401 -> HTTP 500 with a clear French/English detail; upstream 5xx -> 502 'Push provider unavailable'. Clean and testable.",
+    "admin_broadcast correctly chunks by 100 and wraps each chunk in try/except so a bad chunk does not fail the whole broadcast; failure is logged as a warning. Note: `logger` is referenced inside admin_broadcast (line ~282) but defined at module bottom (line ~667). It works because logger is a module-level global resolved at call time, but stylistically it should be initialised earlier (right after logging.basicConfig) to survive future refactors that might import/call at import time.",
+    "_push_client is a module-level httpx.AsyncClient with headers set once at import — if EMERGENT_PUSH_KEY is rotated at runtime it will not pick up the change without a restart. Fine for the current deployment model.",
+    "send_push validates recipients<=100 and required data fields (title/message) before hitting the relay. Good defensive check.",
+    "Admin guard is uniform (Depends(require_admin)) across /admin/broadcast, /admin/verify, /admin/summary, /admin/cards, /admin/sync, /admin/airtable-info — consistent."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (38/38 executable tests)", "frontend": "N/A (backend-only run)"},
+  "seed_data_creation": "None. Broadcast tests only READ push_users (empty in preview); no test data inserted.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Public URL from frontend/.env: https://dev-emergent-lab.preview.emergentagent.com. Admin token: declic-admin-2026 (X-Admin-Token header). EMERGENT_PUSH_KEY=placeholder in preview -> /api/register-push is EXPECTED to return HTTP 500 with detail 'EMERGENT_PUSH_KEY missing or invalid'; this is by design and MUST NOT be treated as a bug. New test file: /app/backend/tests/test_push_notifications.py (reuse for regressions).",
+  "rca_of_issue": "N/A — no bugs found. All acceptance criteria in the review request are met."
+}
