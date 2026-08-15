@@ -22,8 +22,8 @@ export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "pro";
 // Expo Go / web preview / any dev build run against the RevenueCat Test Store.
 export const simulatedStore = Platform.OS === "web" || __DEV__;
 
-// The integration is usable as long as we have at least the Test Store key.
-export const rcEnabled = !!TEST_KEY;
+// The integration is usable as long as we have at least one API key.
+export const rcEnabled = !!(TEST_KEY || IOS_KEY || ANDROID_KEY);
 
 function getApiKey(): string {
   if (simulatedStore) return TEST_KEY as string; // Test Store (Expo Go + web preview + dev)
