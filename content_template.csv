@@ -1,0 +1,10 @@
+mode,texte,texte_b,variante,intensite,vibe,gage,alternative,tags_theme,packs,premium,age18,actif
+qui-est-le-plus,de finir la soirée endormi·e sur le canapé ?,,,1,Fun,La personne désignée : gorgée.,La personne désignée raconte pourquoi.,amitié,Coloc|Intég,non,non,oui
+je-nai-jamais,Je n'ai jamais menti sur mon âge.,,,2,Découverte,Si tu l'as fait : gorgée.,Si tu l'as fait : raconte.,secret,Intég,non,non,oui
+action-verite,Imite quelqu'un du groupe les autres devinent.,,action,2,Fun,Tu refuses : gorgée.,Tu refuses : un défi choisi par le groupe.,absurde,Coloc,non,non,oui
+action-verite,Quel est ton pire date ?,,verite,3,Sans filtre,Tu refuses : gorgée.,Tu refuses : révèle un autre secret.,séduction,Entre meufs,non,non,oui
+cash-ou-cash,Ne plus jamais poster de story,Ne plus jamais liker un post,,3,Fun,,,réseaux,Coloc|Intég,non,non,oui
+cash-ou-cash,Option A // Option B,,,3,Fun,,,opinion,,non,non,oui
+le-verdict,À quel point {J} assure en soirée ?,,,3,Sans filtre,,,opinion,Intég,oui,non,oui
+tu-me-connais,Quel est le plat préféré de ton binôme ?,,,2,Découverte,,,amitié,Couples,oui,non,oui
+hot,Décris ton dernier rêve un peu trop réaliste.,,,4,Hot,Tu refuses : gorgée.,Tu refuses : passe ton tour.,sexe,Couples,oui,oui,oui

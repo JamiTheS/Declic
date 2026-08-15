@@ -1,0 +1,44 @@
+diff --git a/node_modules/expo-router/_ctx.android.js b/node_modules/expo-router/_ctx.android.js
+index 1afb1f8..9493453 100644
+--- a/node_modules/expo-router/_ctx.android.js
++++ b/node_modules/expo-router/_ctx.android.js
+@@ -1,5 +1,5 @@
+ export const ctx = require.context(
+-  process.env.EXPO_ROUTER_APP_ROOT,
++  "../../app",
+   true,
+   /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)|(?:\+middleware)))\.[tj]sx?$).*(?:\.ios|\.web)?\.[tj]sx?$/,
+   process.env.EXPO_ROUTER_IMPORT_MODE
+diff --git a/node_modules/expo-router/_ctx.ios.js b/node_modules/expo-router/_ctx.ios.js
+index b30ee6c..5ca1fec 100644
+--- a/node_modules/expo-router/_ctx.ios.js
++++ b/node_modules/expo-router/_ctx.ios.js
+@@ -1,5 +1,5 @@
+ export const ctx = require.context(
+-  process.env.EXPO_ROUTER_APP_ROOT,
++  "../../app",
+   true,
+   /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)|(?:\+middleware)))\.[tj]sx?$).*(?:\.android|\.web)?\.[tj]sx?$/,
+   process.env.EXPO_ROUTER_IMPORT_MODE
+diff --git a/node_modules/expo-router/_ctx.js b/node_modules/expo-router/_ctx.js
+index 0979e39..28e183c 100644
+--- a/node_modules/expo-router/_ctx.js
++++ b/node_modules/expo-router/_ctx.js
+@@ -1,5 +1,5 @@
+ export const ctx = require.context(
+-  process.env.EXPO_ROUTER_APP_ROOT,
++  "../../app",
+   true,
+   // Ignore root `./+html.js` and API route files `./generate+api.tsx`.
+   /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)))\.[tj]sx?$).*\.[tj]sx?$/
+diff --git a/node_modules/expo-router/_ctx.web.js b/node_modules/expo-router/_ctx.web.js
+index 8061699..aca6f93 100644
+--- a/node_modules/expo-router/_ctx.web.js
++++ b/node_modules/expo-router/_ctx.web.js
+@@ -1,5 +1,5 @@
+ export const ctx = require.context(
+-  process.env.EXPO_ROUTER_APP_ROOT,
++  "../../app",
+   true,
+   /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+middleware)|(?:\+(html|native-intent))))\.[tj]sx?$).*(?:\.android|\.ios|\.native)?\.[tj]sx?$/,
+   process.env.EXPO_ROUTER_IMPORT_MODE

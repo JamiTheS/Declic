@@ -1,0 +1,29 @@
+{
+  "summary": "End-to-end test of Déclic (Expo + FastAPI). Backend: 14/14 pytest passed against public URL, catalog returns 357 cards / version 3 across 7 modes (action-verite 78, qui-est-le-plus 71, je-nai-jamais 63, hot 46, cash-ou-cash 36, le-verdict 35, tu-me-connais 28), admin token 'declic-admin-2026' enforced (401 without / with old token, 200 with new). Frontend flows all working end-to-end on mobile viewport 390x844: age-gate -> setup (3 players) -> hub. La Bombe: launches to /game?mode=bombe, renders bomb glyph + category text ('Une appli sur ton téléphone', etc.) + pass instruction, bottom bar (thermo + Passer) correctly HIDDEN, tapping the play area does not crash, BOOM screen appears after hidden timer (~20s) with gage banner ('Prends une gorgée', alt '10 pompes'), sanitary banner shown, 'CARTE SUIVANTE' (testID bombe-next) advances to card 2/14. Confessions: hub tile routes to /confessions, full intro -> handoff -> input -> save loop for 3 players works, reveal phase renders quote + suspect grid, guess -> reveal-author -> next-reveal all functional. Edge case: 2 players correctly shows 'Il faut au moins 3 joueurs' screen without crash. Non-regression: qui-est-le-plus / je-nai-jamais / action-verite / cash-ou-cash render their cards; le-verdict / tu-me-connais / hot correctly redirect to /paywall for non-premium user. Soirée Déclic: launches from /launch, builds 28-card deck starting at chill intensity, confession/bombe correctly excluded from Soirée deck. Settings: sober / haptics / sound / theme switches all present and toggle; sober mode removes the alcohol sanitary banner and swaps the gage for the non-alcoholic alternative on je-nai-jamais. No React Native red screens, no page errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "hub / global", "issues": ["Console warns about deprecated web style props from RN internals: 'textShadow*' and 'shadow*' deprecated (use textShadow / boxShadow), and props.pointerEvents deprecated (use style.pointerEvents). Cosmetic, not blocking, likely coming from third-party components or older StyleSheet usage."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_declic_api.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Optional: hunt down the textShadow*/shadow*/pointerEvents deprecation warnings in the codebase (or in a dependency) to keep the console clean.",
+    "Note: web preview logs 'Animated: useNativeDriver is not supported' — expected on web, safe to ignore, but on native the bombe pulse/shake will use the native driver correctly."
+  ],
+  "critical_code_review_comments": [
+    "game.tsx bombe branch is clean: correctly returns catalog bombe cards if any, otherwise buildDefaultBombeDeck(), and correctly hides the bottom bar via card.mode !== 'bombe'.",
+    "escalation.ts explicitly excludes mode==='confession' from Soirée. Bombe is NOT excluded, so a future Airtable 'bombe' card would be rendered via the case 'bombe' branch inside a Soirée run — consistent with the request.",
+    "Admin token guard fails closed if ADMIN_TOKEN env is missing (503). Good."
+  ],
+  "updated_files": ["/app/backend/tests/test_declic_api.py (updated BASE_URL default + ADMIN_TOKEN default to match current env)"],
+  "success_rate": {"backend": "100% (14/14)", "frontend": "100% (all requested flows verified)"},
+  "seed_data_creation": "None. Test player names Alice/Bob/Charlie are in-memory only. CSV import test cleans up its ZZTEST rows.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend admin token is 'declic-admin-2026'. Public URL is EXPO_PUBLIC_BACKEND_URL from frontend/.env (https://dev-emergent-lab.preview.emergentagent.com). Bombe timer is 8-35s (shorter at higher intensité) so allow up to ~40s per bomb card when asserting the BOOM screen. Confessions requires >=3 players; the edge-case screen has testID='confession-need-players'.",
+  "rca_of_issue": "N/A — no bugs found."
+}
