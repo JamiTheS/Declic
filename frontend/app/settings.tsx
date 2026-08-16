@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, Switch, Modal, Platform,
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/src/context/AppContext";
 import { useSubscription } from "@/src/lib/revenuecat";
@@ -31,7 +32,10 @@ function Row({ icon, title, subtitle, right, onPress, testID, c }: {
 export default function Settings() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { soberMode, setSoberMode, haptics, setHaptics, soundEnabled, setSoundEnabled, isPremium } = useApp();
+  const {
+    soberMode, setSoberMode, haptics, setHaptics, soundEnabled, setSoundEnabled, isPremium,
+    testUnlockEnabled, testUnlock, setTestUnlock,
+  } = useApp();
   const { restore, isRestoring } = useSubscription();
   const { isDark, toggle, colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -106,6 +110,14 @@ export default function Settings() {
             onPress={manageSubscription}
             right={<MaterialCommunityIcons name="chevron-right" size={24} color={colors.muted} />}
             testID="settings-customer-center" />
+          {testUnlockEnabled && (
+            <>
+              <View style={styles.divider} />
+              <Row c={colors} icon="test-tube" title="Débloquer Premium (test)"
+                subtitle="Build de test uniquement · aucun achat réel"
+                right={<Switch value={testUnlock} onValueChange={setTestUnlock} trackColor={{ true: colors.brand, false: colors.borderStrong }} thumbColor="#fff" testID="settings-test-unlock-switch" />} />
+            </>
+          )}
         </View>
 
         <Text style={styles.section}>À propos</Text>
@@ -119,7 +131,7 @@ export default function Settings() {
           <Text style={styles.healthText}>{HEALTH_MSG}</Text>
         </View>
         <Pressable onPress={onVersionTap} testID="version-tap">
-          <Text style={styles.version}>Déclic · v1.0.0</Text>
+          <Text style={styles.version}>Déclic · v{Constants.expoConfig?.version ?? "1.0.0"}</Text>
         </Pressable>
       </ScrollView>
 

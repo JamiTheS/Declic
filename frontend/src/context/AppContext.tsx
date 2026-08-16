@@ -178,6 +178,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSoundEnabledState(v);
     storage.setItem(K.sound, v);
   }, []);
+  const setTestUnlock = useCallback((v: boolean) => {
+    setTestUnlockState(v);
+    storage.setItem(K.testUnlock, v);
+  }, []);
 
   const startSession = useCallback((mode: string, packLabel: string | null = null) => {
     setStats(emptyStats(mode, packLabel));
@@ -222,6 +226,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         soundEnabled,
         setSoundEnabled,
         isPremium,
+        testUnlockEnabled: TEST_UNLOCK_ENABLED,
+        testUnlock,
+        setTestUnlock,
         stats,
         startSession,
         recordCard,
