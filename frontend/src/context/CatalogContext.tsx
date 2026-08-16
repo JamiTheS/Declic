@@ -32,7 +32,9 @@ const Ctx = createContext<CatalogCtx>({
   refresh: async () => {},
 });
 
-const CACHE_KEY = "declic.catalog.v3";
+// v4: the embedded pack now carries the full catalog. Bumped so a cache written
+// against the old backend can't shadow it on existing installs.
+const CACHE_KEY = "declic.catalog.v4";
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [cards, setCards] = useState<Card[]>(SEED_CARDS);
