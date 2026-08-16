@@ -69,7 +69,13 @@ export default function RootLayout() {
     "Satoshi-Black": require("@/assets/fonts/Satoshi-Black.ttf"),
   });
 
-  const ready = (iconsLoaded || iconsError) && (fontsLoaded || fontsError);
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const ready = timedOut || ((iconsLoaded || iconsError) && (fontsLoaded || fontsError));
 
   useEffect(() => {
     if (ready) {
