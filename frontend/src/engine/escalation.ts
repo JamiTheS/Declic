@@ -15,6 +15,10 @@ const AMBIANCE_MAX: Record<Ambiance, number> = {
   chaud: 4,
 };
 
+// Modes that run as a self-contained round on their own screen (secret reveal,
+// collection or voting phases). They are never dealt into a card deck.
+const STANDALONE_MODES = new Set(["confession", "imposteur"]);
+
 /**
  * The "DJ" — builds the auto-escalation sequence for the "Soirée Déclic" mode.
  * Starts federating (level 1-2), ramps intensity every ~4 cards, never repeats
@@ -29,10 +33,13 @@ export function buildSoiree(
   const count = opts.count ?? 28;
   // Free players never see premium cards, so a launched game is never
   // interrupted by a paywall. Premium is discovered on the hub / launch screen.
-  // "confession" is excluded — it needs its own collection phase (dedicated
-  // screen) and must never be rendered by the standard card renderer.
+  // "confession" and "imposteur" are excluded — each needs its own multi-phase
+  // round (dedicated screen) and must never be rendered by the standard card
+  // renderer.
   const pool = shuffle(
-    all.filter((c) => c.actif && c.mode !== "confession" && (opts.isPremium || !c.premium))
+    all.filter(
+      (c) => c.actif && !STANDALONE_MODES.has(c.mode) && (opts.isPremium || !c.premium)
+    )
   );
   const used = new Set<string>();
   const deck: Card[] = [];

@@ -18,10 +18,10 @@ const SOIREE_IMG =
 
 const GRID_MODES = [
   "qui-est-le-plus", "je-nai-jamais", "bombe", "action-verite",
-  "cash-ou-cash", "confession", "le-verdict", "tu-me-connais", "hot",
+  "cash-ou-cash", "confession", "imposteur", "le-verdict", "tu-me-connais", "hot",
 ];
 const PREMIUM_MODES = new Set(["le-verdict", "tu-me-connais", "hot"]);
-const ROUTED_MODES: Record<string, string> = { confession: "/confessions" };
+const ROUTED_MODES: Record<string, string> = { confession: "/confessions", imposteur: "/imposteur" };
 
 const AMBIANCES: { id: Ambiance; label: string; emoji: string }[] = [
   { id: "chill", label: "Chill", emoji: "😎" },

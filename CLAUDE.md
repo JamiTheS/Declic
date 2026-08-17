@@ -73,7 +73,11 @@ premium (bool), actif (bool), packs (string[]), vibe (string)
 ```
 
 **Slugs de mode** (valeurs de `card.mode`) :
-`qui-est-le-plus`, `je-nai-jamais`, `action-verite`, `cash-ou-cash`, `le-verdict`, `tu-me-connais`, `hot`.
+`qui-est-le-plus`, `je-nai-jamais`, `action-verite`, `cash-ou-cash`, `le-verdict`, `tu-me-connais`, `hot`, `bombe`, `confession`, `imposteur`.
+
+**Modes autonomes** (`confession`, `imposteur`) : ils ont leur propre écran (`app/confessions.tsx`, `app/imposteur.tsx`), routés via `ROUTED_MODES` dans le hub, et sont exclus de `buildSoiree` — ils ne passent jamais par le rendu de cartes standard.
+
+Pour `imposteur`, `variante` vaut `mots` ou `questions`, `texte` = secret des civils et `texte_b` = secret de l'imposteur (sa variante proche).
 
 **Modes premium** : `le-verdict`, `tu-me-connais`, `hot`.
 

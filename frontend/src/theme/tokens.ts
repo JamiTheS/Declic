@@ -115,6 +115,7 @@ export const MODE_META: Record<
   "hot": { label: "Hot / Intime", short: "HOT · INTIME", color: "#D14D5E", onColor: "#160D0A", icon: "fire" },
   "bombe": { label: "La Bombe", short: "LA BOMBE", color: "#F2762E", onColor: "#160D0A", icon: "bomb" },
   "confession": { label: "Confessions", short: "CONFESSIONS", color: "#7A5EA8", onColor: "#F4F1EA", icon: "incognito" },
+  "imposteur": { label: "L'Imposteur", short: "L'IMPOSTEUR", color: "#3FA7A0", onColor: "#0B0B0E", icon: "drama-masks" },
 };
 
 // Short "how to play" notice per game mode — shown via the in-game (?) button.

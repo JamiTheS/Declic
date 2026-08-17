@@ -7,14 +7,17 @@ export type GameMode =
   | "tu-me-connais"
   | "hot"
   | "bombe"
-  | "confession";
+  | "confession"
+  | "imposteur";
 
 export type Card = {
   id: string;
   mode: GameMode;
   texte: string;
   texte_b?: string | null;
-  variante?: "action" | "verite" | null;
+  // action/verite: Action ou Vérité. mots/questions: the two Imposteur variants
+  // (a secret word vs. a secret question), which decide what texte/texte_b hold.
+  variante?: "action" | "verite" | "mots" | "questions" | null;
   vibe?: string | null;
   gage: string;
   alternative: string;
