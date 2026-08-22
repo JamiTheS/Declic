@@ -7,7 +7,9 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@/src/theme/ThemeContext";
 import { FONTS, SPACING, RADIUS, Colors } from "@/src/theme/tokens";
 
-const CONTACT_EMAIL = "privacy@declic.app";
+// Must match the address published in the hosted policy — a reviewer comparing
+// the two should not find a second, unreachable contact.
+const CONTACT_EMAIL = "damiendchps@gmail.com";
 
 const SECTIONS: { title: string; body: string }[] = [
   { title: "En bref", body: "Déclic Party est un jeu d'ambiance sans compte. On ne te demande ni email, ni numéro, ni identifiant, et aucun compte n'est créé." },

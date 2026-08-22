@@ -16,7 +16,7 @@ const PERKS = [
   "Tous les modes premium (Le Verdict, Tu me connais, Hot)",
   "Le moteur d'escalade complet (chaud + intime)",
   "Tous les packs & presets thématiques",
-  "Plus de 470 questions et défis originaux",
+  "Plus de 560 questions et défis originaux",
 ];
 
 // App Store Review guideline 3.1.2 requires the purchase screen itself to link
