@@ -13,8 +13,9 @@ import { FONTS, SPACING, RADIUS, MODE_META, modePalette, hexAlpha, Colors } from
 import { Card, Player } from "@/src/types";
 
 type Variant = "mots" | "questions";
-type Phase = "intro" | "handoff" | "secret" | "answer" | "vote" | "verdict" | "done";
-type Outcome = "impostor-survived" | "impostor-caught" | "impostor-redeemed";
+type Role = "civil" | "impostor" | "white";
+type Phase = "intro" | "handoff" | "secret" | "answer" | "vote" | "reveal" | "guess" | "done";
+type Outcome = "civils" | "bad";
 
 const VARIANTS: { id: Variant; label: string; tagline: string; icon: string }[] = [
   { id: "mots", label: "Mots", tagline: "Un mot secret. L'imposteur en a un autre.", icon: "text-short" },
@@ -31,14 +32,38 @@ const shuffled = <T,>(arr: T[]): T[] => {
 };
 
 /**
- * L'Imposteur — pass-and-play, single device.
+ * Role mix by table size, mirroring the ratios Undercover settled on.
  *
- * Everyone is shown a secret (card.texte), except one player who is shown a
- * near-miss variant of it (card.texte_b). Crucially NOBODY is told they are the
- * impostor: each player believes they hold the real secret, which is what makes
- * the round paranoid rather than a straight bluffing exercise. The impostor is
- * only revealed at the verdict, and then gets one shot at naming the real
- * secret to turn the gage back on the group.
+ * Mister White only joins from 6 players. Adding him at 5 leaves 3 civilians
+ * against 2 traitors, and since the traitors win as soon as they equal the
+ * civilians, a single misplaced vote would end the game on the spot — verified
+ * by simulation, where civilians won 14% of 5-player games with him versus 60%
+ * without. Traitor counts stay deliberately low for the same reason.
+ */
+function composition(n: number): { impostors: number; whites: number } {
+  if (n <= 5) return { impostors: 1, whites: 0 };
+  if (n <= 7) return { impostors: 1, whites: 1 };
+  if (n <= 10) return { impostors: 2, whites: 1 };
+  return { impostors: 3, whites: 1 };
+}
+
+/**
+ * L'Imposteur — pass-and-play, single device, played over several rounds.
+ *
+ * Civilians see the real secret (card.texte) and the impostor(s) a near-miss
+ * variant (card.texte_b). Impostors are NOT told they are impostors: each one
+ * believes they hold the real secret, which is what makes the game paranoid
+ * rather than a straight bluffing exercise.
+ *
+ * Mister White is the exception — he is handed no secret at all, so he
+ * necessarily knows his role and has to improvise blind. Because he has nothing
+ * to go on, he is never made to speak first in a round.
+ *
+ * Each round eliminates exactly one player and reveals only THAT player's role,
+ * so voting out a civilian tells the table nothing about who the impostor is —
+ * the game simply continues. It ends when every impostor and white is out
+ * (civilians win), when they equal the remaining civilians (they win), or when
+ * an eliminated Mister White correctly names the real secret.
  */
 export default function Imposteur() {
   const router = useRouter();
@@ -52,15 +77,25 @@ export default function Imposteur() {
 
   const [variant, setVariant] = useState<Variant>("questions");
   const [card, setCard] = useState<Card | null>(null);
-  const [impostorIdx, setImpostorIdx] = useState(0);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [eliminated, setEliminated] = useState<number[]>([]);
   const [phase, setPhase] = useState<Phase>("intro");
   const [turn, setTurn] = useState(0);
+  const [round, setRound] = useState(1);
   const [speakOrder, setSpeakOrder] = useState<number[]>([]);
   const [answerTurn, setAnswerTurn] = useState(0);
   const [suspect, setSuspect] = useState<Player | null>(null);
+  const [lastOut, setLastOut] = useState<number | null>(null);
+  const [impostorRedeemed, setImpostorRedeemed] = useState(false);
+  const [whiteWon, setWhiteWon] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
   const enough = players.length >= 3;
+  const comp = composition(players.length);
+
+  const aliveIdx = players.map((_, i) => i).filter((i) => !eliminated.includes(i));
+  const badAlive = aliveIdx.filter((i) => roles[i] && roles[i] !== "civil");
+  const civilAlive = aliveIdx.filter((i) => roles[i] === "civil");
 
   // Free players only ever draw intensity 1-3 pairs; 4-5 are premium like the
   // rest of the catalog.
@@ -86,16 +121,39 @@ export default function Imposteur() {
 
   const buzz = () => haptics && Haptics.selectionAsync().catch(() => {});
 
-  const startRound = () => {
+  // Mister White has no secret, so opening a round would expose him instantly.
+  // He is swapped out of the first slot whenever he lands there.
+  const buildSpeakOrder = (alive: number[], r: Role[]): number[] => {
+    const order = shuffled(alive);
+    if (order.length > 1 && r[order[0]] === "white") {
+      const j = 1 + Math.floor(Math.random() * (order.length - 1));
+      [order[0], order[j]] = [order[j], order[0]];
+    }
+    return order;
+  };
+
+  const startGame = () => {
     if (!pool.length) return;
     buzz();
-    setCard(pool[Math.floor(Math.random() * pool.length)]);
-    setImpostorIdx(Math.floor(Math.random() * players.length));
-    setSpeakOrder(shuffled(players.map((_, i) => i)));
+    const picked = pool[Math.floor(Math.random() * pool.length)];
+    const { impostors, whites } = composition(players.length);
+    const seats = shuffled(players.map((_, i) => i));
+    const next: Role[] = players.map(() => "civil");
+    seats.slice(0, impostors).forEach((i) => { next[i] = "impostor"; });
+    seats.slice(impostors, impostors + whites).forEach((i) => { next[i] = "white"; });
+
+    setCard(picked);
+    setRoles(next);
+    setEliminated([]);
+    setRound(1);
     setTurn(0);
     setAnswerTurn(0);
     setSuspect(null);
+    setLastOut(null);
+    setImpostorRedeemed(false);
+    setWhiteWon(false);
     setOutcome(null);
+    setSpeakOrder(buildSpeakOrder(players.map((_, i) => i), next));
     setPhase("handoff");
   };
 
@@ -118,22 +176,58 @@ export default function Imposteur() {
     setAnswerTurn(answerTurn + 1);
   };
 
-  const accuse = () => {
+  const eliminate = () => {
     if (!suspect) return;
     if (haptics) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
-    const caught = suspect.id === players[impostorIdx].id;
-    setOutcome(caught ? "impostor-caught" : "impostor-survived");
-    setPhase("verdict");
+    const outIdx = players.findIndex((p) => p.id === suspect.id);
+    setLastOut(outIdx);
+    setEliminated((prev) => [...prev, outIdx]);
+    setPhase("reveal");
   };
 
-  const settleRedemption = (found: boolean) => {
+  /**
+   * Decide whether the game is over, using the post-elimination survivor lists.
+   * `whiteWins` short-circuits everything: an eliminated Mister White who names
+   * the real secret takes the win outright.
+   */
+  const continueOrEnd = (whiteWins = false) => {
+    if (whiteWins) {
+      setWhiteWon(true);
+      setOutcome("bad");
+      setPhase("done");
+      return;
+    }
+    if (badAlive.length === 0) {
+      setOutcome("civils");
+      setPhase("done");
+      return;
+    }
+    if (badAlive.length >= civilAlive.length) {
+      setOutcome("bad");
+      setPhase("done");
+      return;
+    }
+    setRound((r) => r + 1);
+    setSpeakOrder(buildSpeakOrder(aliveIdx, roles));
+    setAnswerTurn(0);
+    setSuspect(null);
+    setLastOut(null);
+    setPhase("answer");
+  };
+
+  const settleGuess = (found: boolean) => {
     if (haptics) {
       Haptics.notificationAsync(
         found ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error
       ).catch(() => {});
     }
-    setOutcome(found ? "impostor-redeemed" : "impostor-caught");
-    setPhase("done");
+    const role = lastOut !== null ? roles[lastOut] : "civil";
+    if (role === "white") {
+      continueOrEnd(found);
+      return;
+    }
+    if (found) setImpostorRedeemed(true);
+    continueOrEnd(false);
   };
 
   const finish = () => router.replace("/hub");
@@ -169,6 +263,7 @@ export default function Imposteur() {
 
   // ---- Intro / variant picker ----
   if (phase === "intro") {
+    const civils = players.length - comp.impostors - comp.whites;
     return (
       <View style={styles.container}>
         <Header title="L'Imposteur" />
@@ -178,8 +273,9 @@ export default function Imposteur() {
           </View>
           <Text style={styles.bigTitle}>L'Imposteur</Text>
           <Text style={styles.bigSub}>
-            Le tél passe de main en main : chacun découvre son secret. Un seul en a reçu un autre —
-            et il ne le sait pas non plus. À vous de le démasquer.
+            Chacun découvre son secret en privé. À chaque tour, tout le monde s'exprime puis le
+            groupe élimine un suspect — mais on ne révèle que le rôle de l'éliminé. Tant qu'il reste
+            un traître, la partie continue.
           </Text>
 
           <Text style={styles.pickerLabel}>CHOISIS TA VERSION</Text>
@@ -201,24 +297,41 @@ export default function Imposteur() {
             })}
           </View>
 
+          <View style={[styles.compBox, { borderColor: pal.overlayBorder, backgroundColor: pal.chipBg }]} testID="imposteur-composition">
+            <Text style={[styles.compTitle, { color: pal.muted }]}>À {players.length} JOUEURS</Text>
+            <Text style={[styles.compLine, { color: pal.fg }]}>
+              {civils} civils · {comp.impostors} imposteur{comp.impostors > 1 ? "s" : ""}
+              {comp.whites ? " · 1 Mister White" : ""}
+            </Text>
+            {comp.whites ? (
+              <Text style={[styles.compHint, { color: pal.muted }]}>
+                Mister White n'a aucun secret : il doit tout inventer.
+              </Text>
+            ) : (
+              <Text style={[styles.compHint, { color: pal.muted }]}>
+                Mister White apparaît à partir de 6 joueurs.
+              </Text>
+            )}
+          </View>
+
           {!pool.length ? (
             <Text style={[styles.warn, { color: colors.warning }]} testID="imposteur-empty">
               Aucune carte disponible pour cette version.
             </Text>
           ) : (
             <Text style={styles.poolHint}>
-              {pool.length} manche{pool.length > 1 ? "s" : ""} disponible{pool.length > 1 ? "s" : ""}
+              {pool.length} partie{pool.length > 1 ? "s" : ""} disponible{pool.length > 1 ? "s" : ""}
               {!isPremium ? " · intensités 4-5 en Premium" : ""}
             </Text>
           )}
 
           <Pressable
             style={[styles.cta, { backgroundColor: pool.length ? pal.color : colors.surfaceTertiary }]}
-            onPress={startRound}
+            onPress={startGame}
             disabled={!pool.length}
             testID="imposteur-start"
           >
-            <Text style={[styles.ctaText, { color: pool.length ? pal.onAccent : colors.muted }]}>LANCER LA MANCHE</Text>
+            <Text style={[styles.ctaText, { color: pool.length ? pal.onAccent : colors.muted }]}>LANCER LA PARTIE</Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -246,25 +359,43 @@ export default function Imposteur() {
   // ---- Private secret ----
   if (phase === "secret" && card) {
     const p = players[turn];
-    // The impostor is shown texte_b. The screen is deliberately identical for
-    // everyone: no one is told which side they are on.
-    const secret = turn === impostorIdx ? card.texte_b! : card.texte;
+    const role = roles[turn];
+    // Civilians and impostors get an identical-looking card, so neither knows
+    // which side they are on. Mister White necessarily learns his role: there
+    // is no secret to hand him.
+    const isWhite = role === "white";
+    const secret = role === "impostor" ? card.texte_b! : card.texte;
     return (
       <View style={styles.container}>
         <Header title={`Secret · ${turn + 1}/${players.length}`} />
         <View style={styles.secretBody}>
           <Text style={styles.secretWho}>{p.emoji} {p.name}</Text>
-          <View style={[styles.secretCard, { backgroundColor: pal.chipBg, borderColor: pal.overlayBorder }]}>
-            <Text style={[styles.secretLabel, { color: pal.muted }]}>
-              {variant === "mots" ? "TON MOT" : "TA QUESTION"}
+          {isWhite ? (
+            <View style={[styles.secretCard, { backgroundColor: pal.chipBg, borderColor: hexAlpha(meta.color, 0.6) }]}>
+              <Text style={[styles.secretLabel, { color: pal.muted }]}>TU ES MISTER WHITE</Text>
+              <Text style={[styles.secretText, { color: pal.fg }]} testID="imposteur-secret">
+                Aucun secret pour toi.
+              </Text>
+              <Text style={[styles.secretHint, { color: pal.muted, textAlign: "left" }]}>
+                Écoute les autres, déduis, et fais-toi passer pour l'un d'eux. Tu ne commenceras
+                jamais un tour.
+              </Text>
+            </View>
+          ) : (
+            <View style={[styles.secretCard, { backgroundColor: pal.chipBg, borderColor: pal.overlayBorder }]}>
+              <Text style={[styles.secretLabel, { color: pal.muted }]}>
+                {variant === "mots" ? "TON MOT" : "TA QUESTION"}
+              </Text>
+              <Text style={[styles.secretText, { color: pal.fg }]} testID="imposteur-secret">{secret}</Text>
+            </View>
+          )}
+          {!isWhite && (
+            <Text style={styles.secretHint}>
+              {variant === "mots"
+                ? "Retiens-le. Tu devras donner des indices sans jamais le prononcer."
+                : "Retiens-la. Tu devras y répondre à voix haute, sans jamais la lire."}
             </Text>
-            <Text style={[styles.secretText, { color: pal.fg }]} testID="imposteur-secret">{secret}</Text>
-          </View>
-          <Text style={styles.secretHint}>
-            {variant === "mots"
-              ? "Retiens-le. Tu devras donner des indices sans jamais le prononcer."
-              : "Retiens-la. Tu devras y répondre à voix haute, sans jamais la lire."}
-          </Text>
+          )}
           <Pressable style={[styles.cta, { backgroundColor: pal.color }]} onPress={closeSecret} testID="imposteur-secret-ok">
             <Text style={[styles.ctaText, { color: pal.onAccent }]}>C'EST MÉMORISÉ</Text>
           </Pressable>
@@ -273,12 +404,12 @@ export default function Imposteur() {
     );
   }
 
-  // ---- Answer round ----
+  // ---- Speaking round ----
   if (phase === "answer") {
     const p = players[speakOrder[answerTurn]];
     return (
       <View style={styles.container}>
-        <Header title={`Tour de table · ${answerTurn + 1}/${speakOrder.length}`} />
+        <Header title={`Tour ${round} · ${answerTurn + 1}/${speakOrder.length}`} />
         <View style={styles.center}>
           <Text style={styles.handoffEmoji}>{p.emoji}</Text>
           <Text style={styles.bigTitle}>À {p.name}</Text>
@@ -301,12 +432,13 @@ export default function Imposteur() {
   if (phase === "vote") {
     return (
       <View style={styles.container}>
-        <Header title="Le vote" />
+        <Header title={`Vote · tour ${round}`} />
         <ScrollView contentContainerStyle={styles.voteBody} showsVerticalScrollIndicator={false}>
-          <Text style={styles.bigTitle}>Qui est l'imposteur ?</Text>
+          <Text style={styles.bigTitle}>Qui éliminez-vous ?</Text>
           <Text style={styles.bigSub}>Débattez, puis désignez ensemble un suspect.</Text>
           <View style={styles.grid}>
-            {players.map((p) => {
+            {aliveIdx.map((i) => {
+              const p = players[i];
               const sel = suspect?.id === p.id;
               return (
                 <Pressable
@@ -323,99 +455,146 @@ export default function Imposteur() {
           </View>
           <Pressable
             style={[styles.cta, { backgroundColor: suspect ? pal.color : colors.surfaceTertiary }]}
-            onPress={accuse}
+            onPress={eliminate}
             disabled={!suspect}
             testID="imposteur-accuse"
           >
-            <Text style={[styles.ctaText, { color: suspect ? pal.onAccent : colors.muted }]}>ACCUSER</Text>
+            <Text style={[styles.ctaText, { color: suspect ? pal.onAccent : colors.muted }]}>ÉLIMINER</Text>
           </Pressable>
         </ScrollView>
       </View>
     );
   }
 
-  // ---- Verdict: reveal, then the impostor's one shot at redemption ----
-  if (phase === "verdict" && card) {
-    const impostor = players[impostorIdx];
-    const caught = outcome === "impostor-caught";
+  // ---- Reveal the eliminated player's role (and only theirs) ----
+  if (phase === "reveal" && lastOut !== null) {
+    const out = players[lastOut];
+    const role = roles[lastOut];
+    const label =
+      role === "civil" ? "…était un civil." : role === "white" ? "…était Mister White !" : "…était un imposteur !";
     return (
       <View style={styles.container}>
-        <Header title="Verdict" />
+        <Header title={`Élimination · tour ${round}`} />
         <ScrollView contentContainerStyle={styles.voteBody} showsVerticalScrollIndicator={false}>
-          <Text style={styles.handoffEmoji}>{impostor.emoji}</Text>
-          <Text style={styles.bigTitle}>L'imposteur était {impostor.name}</Text>
-          <Text style={[styles.verdictLine, { color: caught ? colors.success : colors.warning }]}>
-            {caught ? "Démasqué ! 🎯" : "Passé entre les mailles 😈"}
+          <Text style={styles.handoffEmoji}>{out.emoji}</Text>
+          <Text style={styles.bigTitle}>{out.name}</Text>
+          <Text
+            style={[styles.verdictLine, { color: role === "civil" ? colors.warning : colors.success }]}
+            testID="imposteur-eliminated-role"
+          >
+            {label}
           </Text>
-
-          {caught ? (
+          {role === "civil" ? (
             <>
-              <View style={[styles.secretCard, { backgroundColor: pal.chipBg, borderColor: pal.overlayBorder }]}>
-                <Text style={[styles.secretLabel, { color: pal.muted }]}>
-                  {impostor.name.toUpperCase()} AVAIT
-                </Text>
-                <Text style={[styles.secretText, { color: pal.fg }]}>{card.texte_b}</Text>
-              </View>
               <Text style={styles.bigSub}>
-                Dernière chance : {impostor.name} annonce à voix haute ce que les autres avaient.
-                S'il tombe juste, le gage se retourne contre le groupe.
+                Le traître court toujours. Personne d'autre n'est révélé — la partie continue.
               </Text>
-              <View style={styles.redemptionRow}>
-                <Pressable
-                  style={[styles.redemptionBtn, { backgroundColor: pal.chipBg, borderColor: pal.overlayBorder }]}
-                  onPress={() => settleRedemption(false)}
-                  testID="imposteur-redemption-fail"
-                >
-                  <Text style={[styles.redemptionText, { color: pal.fg }]}>Raté</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.redemptionBtn, { backgroundColor: pal.color, borderColor: pal.color }]}
-                  onPress={() => settleRedemption(true)}
-                  testID="imposteur-redemption-win"
-                >
-                  <Text style={[styles.redemptionText, { color: pal.onAccent }]}>Il a trouvé !</Text>
-                </Pressable>
-              </View>
+              <Pressable style={[styles.cta, { backgroundColor: pal.color }]} onPress={() => continueOrEnd(false)} testID="imposteur-continue">
+                <Text style={[styles.ctaText, { color: pal.onAccent }]}>TOUR SUIVANT</Text>
+              </Pressable>
             </>
           ) : (
-            <Pressable style={[styles.cta, { backgroundColor: pal.color }]} onPress={() => setPhase("done")} testID="imposteur-to-done">
-              <Text style={[styles.ctaText, { color: pal.onAccent }]}>VOIR LE GAGE</Text>
-            </Pressable>
+            <>
+              <Text style={styles.bigSub}>
+                {role === "white"
+                  ? `Dernière chance : ${out.name} annonce à voix haute ce que les autres avaient. S'il tombe juste, il gagne la partie.`
+                  : `Dernière chance : ${out.name} annonce à voix haute ce que les autres avaient. S'il tombe juste, le gage se retourne contre le groupe.`}
+              </Text>
+              <Pressable style={[styles.cta, { backgroundColor: pal.color }]} onPress={() => { buzz(); setPhase("guess"); }} testID="imposteur-to-guess">
+                <Text style={[styles.ctaText, { color: pal.onAccent }]}>IL TENTE SA CHANCE</Text>
+              </Pressable>
+            </>
           )}
         </ScrollView>
       </View>
     );
   }
 
-  // ---- Done: both secrets + who takes the gage ----
-  const impostor = players[impostorIdx];
-  const groupLoses = outcome === "impostor-survived" || outcome === "impostor-redeemed";
+  // ---- The eliminated traitor's one shot at the real secret ----
+  if (phase === "guess" && lastOut !== null && card) {
+    const out = players[lastOut];
+    return (
+      <View style={styles.container}>
+        <Header title="Sa tentative" />
+        <ScrollView contentContainerStyle={styles.voteBody} showsVerticalScrollIndicator={false}>
+          <Text style={styles.bigTitle}>{out.name} annonce</Text>
+          <Text style={styles.bigSub}>
+            {variant === "mots" ? "Quel était le mot du groupe ?" : "Quelle était la question du groupe ?"}
+          </Text>
+          <View style={[styles.secretCard, { backgroundColor: pal.chipBg, borderColor: pal.overlayBorder }]}>
+            <Text style={[styles.secretLabel, { color: pal.muted }]}>LE GROUPE AVAIT</Text>
+            <Text style={[styles.secretText, { color: pal.fg }]} testID="imposteur-guess-answer">{card.texte}</Text>
+          </View>
+          <View style={styles.redemptionRow}>
+            <Pressable
+              style={[styles.redemptionBtn, { backgroundColor: pal.chipBg, borderColor: pal.overlayBorder }]}
+              onPress={() => settleGuess(false)}
+              testID="imposteur-guess-fail"
+            >
+              <Text style={[styles.redemptionText, { color: pal.fg }]}>Raté</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.redemptionBtn, { backgroundColor: pal.color, borderColor: pal.color }]}
+              onPress={() => settleGuess(true)}
+              testID="imposteur-guess-win"
+            >
+              <Text style={[styles.redemptionText, { color: pal.onAccent }]}>Il a trouvé !</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // ---- Game over ----
+  const traitors = players.filter((_, i) => roles[i] && roles[i] !== "civil");
+  const groupLoses = outcome === "bad" || impostorRedeemed;
   const gageText = soberMode ? card?.alternative : card?.gage;
+  const headline = whiteWon
+    ? "Mister White a tout deviné 😈"
+    : outcome === "bad"
+      ? "Les traîtres l'emportent 😈"
+      : "Le groupe a fait le ménage 🎯";
   return (
     <View style={styles.container}>
-      <Header title="Fin de manche" />
+      <Header title="Fin de partie" />
       <ScrollView contentContainerStyle={styles.voteBody} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.bigTitle, { marginBottom: 2 }]} testID="imposteur-headline">{headline}</Text>
+
         <View style={[styles.secretCard, { backgroundColor: pal.chipBg, borderColor: pal.overlayBorder }]}>
           <Text style={[styles.secretLabel, { color: pal.muted }]}>LE GROUPE AVAIT</Text>
           <Text style={[styles.secretText, { color: pal.fg }]} testID="imposteur-reveal-civils">{card?.texte}</Text>
         </View>
         <View style={[styles.secretCard, { backgroundColor: pal.chipBg, borderColor: hexAlpha(meta.color, 0.5) }]}>
-          <Text style={[styles.secretLabel, { color: pal.muted }]}>{impostor.name.toUpperCase()} AVAIT</Text>
+          <Text style={[styles.secretLabel, { color: pal.muted }]}>LES IMPOSTEURS AVAIENT</Text>
           <Text style={[styles.secretText, { color: pal.fg }]} testID="imposteur-reveal-impostor">{card?.texte_b}</Text>
+        </View>
+
+        <View style={[styles.rolesBox, { borderColor: pal.overlayBorder }]}>
+          {traitors.map((p) => {
+            const i = players.findIndex((x) => x.id === p.id);
+            return (
+              <Text key={p.id} style={[styles.roleLine, { color: pal.fg }]}>
+                {p.emoji} {p.name} — {roles[i] === "white" ? "Mister White" : "Imposteur"}
+              </Text>
+            );
+          })}
         </View>
 
         <View style={[styles.gageBox, { borderColor: pal.overlayBorder, backgroundColor: hexAlpha(meta.color, 0.1) }]}>
           <Text style={[styles.gageWho, { color: pal.fg }]}>
-            {groupLoses ? "Le groupe prend le gage" : `${impostor.name} prend le gage`}
+            {groupLoses ? "Le groupe prend le gage" : "Les traîtres prennent le gage"}
           </Text>
           <Text style={[styles.gageText, { color: pal.muted }]} testID="imposteur-gage">{gageText}</Text>
-          {outcome === "impostor-redeemed" && (
-            <Text style={[styles.gageFlip, { color: colors.success }]}>Rattrapage réussi — retourné contre le groupe.</Text>
+          {impostorRedeemed && !whiteWon && outcome === "civils" && (
+            <Text style={[styles.gageFlip, { color: colors.success }]}>
+              Rattrapage réussi — le gage est retourné contre le groupe.
+            </Text>
           )}
         </View>
 
-        <Pressable style={[styles.cta, { backgroundColor: pal.color }]} onPress={startRound} testID="imposteur-replay">
-          <Text style={[styles.ctaText, { color: pal.onAccent }]}>NOUVELLE MANCHE</Text>
+        <Pressable style={[styles.cta, { backgroundColor: pal.color }]} onPress={startGame} testID="imposteur-replay">
+          <Text style={[styles.ctaText, { color: pal.onAccent }]}>NOUVELLE PARTIE</Text>
         </Pressable>
         <Pressable style={styles.secondary} onPress={finish} testID="imposteur-finish">
           <Text style={[styles.secondaryText, { color: colors.muted }]}>Terminer</Text>
@@ -441,6 +620,10 @@ const makeStyles = (c: Colors) =>
     variantCard: { flex: 1, borderRadius: RADIUS.md, borderWidth: 1, padding: 16, alignItems: "center", gap: 6, minHeight: 130, justifyContent: "center" },
     variantLabel: { fontFamily: FONTS.display, fontSize: 20 },
     variantTag: { fontFamily: FONTS.body, fontSize: 12, textAlign: "center", lineHeight: 17 },
+    compBox: { alignSelf: "stretch", borderRadius: RADIUS.md, borderWidth: 1, padding: 14, gap: 4, alignItems: "center" },
+    compTitle: { fontFamily: FONTS.bodyBold, fontSize: 11, letterSpacing: 1.5 },
+    compLine: { fontFamily: FONTS.displaySemi, fontSize: 17, textAlign: "center" },
+    compHint: { fontFamily: FONTS.body, fontSize: 12, textAlign: "center", lineHeight: 17 },
     poolHint: { fontFamily: FONTS.body, color: c.faint, fontSize: 12, textAlign: "center" },
     warn: { fontFamily: FONTS.body, fontSize: 13, textAlign: "center" },
     cta: { minHeight: 64, alignSelf: "stretch", borderRadius: RADIUS.pill, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, marginTop: 6 },
@@ -463,6 +646,8 @@ const makeStyles = (c: Colors) =>
     redemptionRow: { flexDirection: "row", gap: 10, alignSelf: "stretch", marginTop: 4 },
     redemptionBtn: { flex: 1, minHeight: 64, borderRadius: RADIUS.pill, borderWidth: 1, alignItems: "center", justifyContent: "center" },
     redemptionText: { fontFamily: FONTS.displaySemi, fontSize: 16 },
+    rolesBox: { alignSelf: "stretch", borderRadius: RADIUS.md, borderWidth: 1, padding: 14, gap: 4 },
+    roleLine: { fontFamily: FONTS.body, fontSize: 15, textAlign: "center" },
     gageBox: { alignSelf: "stretch", borderRadius: RADIUS.md, borderWidth: 1, padding: 18, gap: 6 },
     gageWho: { fontFamily: FONTS.displaySemi, fontSize: 18, textAlign: "center" },
     gageText: { fontFamily: FONTS.body, fontSize: 15, textAlign: "center", lineHeight: 21 },
