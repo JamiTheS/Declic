@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@/src/theme/ThemeContext";
 import { FONTS, SPACING, RADIUS, Colors } from "@/src/theme/tokens";
 
@@ -11,11 +11,10 @@ const CONTACT_EMAIL = "privacy@declic.app";
 
 const SECTIONS: { title: string; body: string }[] = [
   { title: "En bref", body: "Déclic Party est un jeu d'ambiance sans compte. On ne te demande ni email, ni numéro, ni identifiant, et aucun compte n'est créé." },
-  { title: "Ce qui reste sur ton téléphone", body: "Les prénoms des joueurs, tes réglages (mode sans alcool, haptique, thème) et ton statut Premium sont stockés localement sur l'appareil. Tu peux tout effacer en désinstallant l'app." },
-  { title: "Statistiques anonymes", body: "Nous enregistrons des événements de jeu strictement anonymes (ex. début de partie) pour améliorer l'app. Ces événements ne contiennent aucune donnée permettant de t'identifier." },
-  { title: "Notifications", body: "Si tu actives les notifications, nous enregistrons un identifiant d'appareil (jeton de notification) afin de t'envoyer des alertes (nouveaux packs, défis). Cet identifiant ne permet pas de t'identifier personnellement, et tu peux désactiver les notifications à tout moment dans les réglages de ton téléphone." },
-  { title: "Catalogue de questions", body: "L'app télécharge le catalogue de questions depuis notre serveur en lecture seule, et le met en cache pour fonctionner hors-ligne." },
-  { title: "Achats", body: "Les abonnements Premium sont gérés par l'App Store / Google Play. Nous ne voyons ni ne stockons tes informations de paiement." },
+  { title: "Ce qui reste sur ton téléphone", body: "Les prénoms des joueurs, tes réglages (mode sans alcool, haptique, sons, thème) et ton statut Premium sont stockés uniquement sur ton appareil. Rien de tout cela ne quitte le téléphone. Tu peux tout effacer en désinstallant l'app." },
+  { title: "Aucun serveur, aucune analyse", body: "Nous n'exploitons aucun serveur qui collecterait tes données. Les questions sont intégrées à l'application : le jeu fonctionne intégralement hors-ligne et n'envoie aucune statistique d'usage." },
+  { title: "Confessions et réponses", body: "Ce que vous écrivez ou dites pendant une partie (confessions, votes, secrets) n'existe que le temps de la manche, en mémoire. Rien n'est enregistré sur l'appareil ni transmis où que ce soit." },
+  { title: "Abonnement Premium", body: "Les abonnements sont gérés par l'App Store et par notre prestataire RevenueCat, qui reçoit un identifiant d'installation anonyme et l'état de ton abonnement afin de débloquer le contenu sur ton appareil. Cet identifiant n'est lié à aucune donnée personnelle, et nous ne voyons jamais tes informations de paiement." },
   { title: "Âge", body: "Déclic Party est réservé aux personnes majeures (18 ans et plus)." },
 ];
 

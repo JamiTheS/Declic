@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Modal } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Modal, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as Haptics from "expo-haptics";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useTheme } from "@/src/theme/ThemeContext";
@@ -13,11 +13,17 @@ import { useSubscription } from "@/src/lib/revenuecat";
 import { presentRevenueCatPaywall, revenueCatUIAvailable } from "@/src/lib/revenuecatUI";
 
 const PERKS = [
-  "Tous les modes premium (Le Verdict, Tu me connais)",
+  "Tous les modes premium (Le Verdict, Tu me connais, Hot)",
   "Le moteur d'escalade complet (chaud + intime)",
   "Tous les packs & presets thématiques",
-  "Des milliers de défis, enrichis en continu",
+  "Plus de 470 questions et défis originaux",
 ];
+
+// App Store Review guideline 3.1.2 requires the purchase screen itself to link
+// to the terms and the privacy policy, and to spell out auto-renewal. Missing
+// either is a standard rejection.
+const TERMS_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
+const PRIVACY_URL = "https://jamithes.github.io/Declic/privacy-policy.html";
 
 const PKG_TITLE: Record<string, string> = {
   ANNUAL: "Annuel",
@@ -257,6 +263,21 @@ export default function Paywall() {
         )}
         {errorMsg && <Text style={styles.errorText} testID="paywall-error">{errorMsg}</Text>}
         {identityError && <Text style={styles.errorText}>Store indisponible : {identityError}</Text>}
+
+        <Text style={styles.legal} testID="paywall-renewal-notice">
+          Abonnement à renouvellement automatique. Il se renouvelle au tarif indiqué, sauf
+          annulation au moins 24 h avant la fin de la période en cours. Tu peux le gérer ou
+          l'annuler à tout moment dans les réglages de ton compte App Store.
+        </Text>
+        <View style={styles.legalLinks}>
+          <Pressable onPress={() => Linking.openURL(TERMS_URL).catch(() => {})} testID="paywall-terms" hitSlop={8}>
+            <Text style={styles.legalLink}>Conditions d'utilisation</Text>
+          </Pressable>
+          <Text style={styles.legalDot}>·</Text>
+          <Pressable onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})} testID="paywall-privacy" hitSlop={8}>
+            <Text style={styles.legalLink}>Politique de confidentialité</Text>
+          </Pressable>
+        </View>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
@@ -326,6 +347,10 @@ const makeStyles = (c: Colors) =>
     unavailableText: { fontFamily: FONTS.body, color: c.onSurfaceSecondary, fontSize: 14, textAlign: "center", lineHeight: 20 },
     simNote: { fontFamily: FONTS.body, color: c.muted, fontSize: 12, marginTop: 16, textAlign: "center" },
     errorText: { fontFamily: FONTS.bodyBold, color: c.brand, fontSize: 13, marginTop: 14, textAlign: "center" },
+    legal: { fontFamily: FONTS.bodyRegular, color: c.faint, fontSize: 11, lineHeight: 16, marginTop: 26, textAlign: "center" },
+    legalLinks: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10 },
+    legalLink: { fontFamily: FONTS.body, color: c.muted, fontSize: 12, textDecorationLine: "underline" },
+    legalDot: { fontFamily: FONTS.body, color: c.faint, fontSize: 12 },
     footer: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: SPACING.lg, paddingTop: 24, gap: 10 },
     restore: { alignItems: "center", justifyContent: "center", minHeight: 40 },
     restoreText: { fontFamily: FONTS.body, color: c.muted, fontSize: 14 },

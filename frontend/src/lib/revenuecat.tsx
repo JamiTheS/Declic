@@ -107,7 +107,7 @@ function useSubscriptionState() {
     const listener = (info: CustomerInfo) =>
       queryClient.setQueryData(["revenuecat", "customer-info"], info);
     Purchases.addCustomerInfoUpdateListener(listener);
-    return () => Purchases.removeCustomerInfoUpdateListener(listener);
+    return () => { Purchases.removeCustomerInfoUpdateListener(listener); };
   }, [queryClient]);
 
   const purchaseMutation = useMutation({

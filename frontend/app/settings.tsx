@@ -1,10 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, Switch, Modal, Platform, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Constants from "expo-constants";
-import * as Haptics from "expo-haptics";
 import { useApp } from "@/src/context/AppContext";
 import { useSubscription } from "@/src/lib/revenuecat";
 import { presentCustomerCenter, revenueCatUIAvailable } from "@/src/lib/revenuecatUI";
@@ -53,21 +52,6 @@ export default function Settings() {
     setManageVisible(true);
   };
 
-  // Hidden creator access: tap the version 7× to reveal the admin space.
-  const tapCount = useRef(0);
-  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onVersionTap = () => {
-    tapCount.current += 1;
-    if (tapTimer.current) clearTimeout(tapTimer.current);
-    tapTimer.current = setTimeout(() => { tapCount.current = 0; }, 1500);
-    if (tapCount.current >= 7) {
-      tapCount.current = 0;
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      router.push("/admin");
-    } else if (tapCount.current >= 4) {
-      Haptics.selectionAsync().catch(() => {});
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -130,9 +114,7 @@ export default function Settings() {
         <View style={styles.healthBox}>
           <Text style={styles.healthText}>{HEALTH_MSG}</Text>
         </View>
-        <Pressable onPress={onVersionTap} testID="version-tap">
-          <Text style={styles.version}>Déclic · v{Constants.expoConfig?.version ?? "1.0.0"}</Text>
-        </Pressable>
+        <Text style={styles.version}>Déclic · v{Constants.expoConfig?.version ?? "1.0.0"}</Text>
       </ScrollView>
 
       <Modal visible={manageVisible} transparent animationType="fade" onRequestClose={() => setManageVisible(false)}>

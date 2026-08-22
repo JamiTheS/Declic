@@ -11,6 +11,11 @@ const DEVICE_ID_KEY = "declic.deviceId";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL as string;
 
+// Push needs a relay to send anything. With no backend configured we must not
+// prompt for the permission at all: asking for a capability the app cannot use
+// is a poor first-launch experience and reviewers flag gratuitous prompts.
+export const pushEnabled = !!BACKEND_URL;
+
 function uuid(): string {
   // RFC4122-ish v4, good enough for an anonymous device id.
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -34,7 +39,7 @@ export async function getDeviceUserId(): Promise<string> {
  * upserts). No-op on web and when permission is not granted.
  */
 export async function registerForPush(): Promise<void> {
-  if (Platform.OS === "web") return;
+  if (Platform.OS === "web" || !pushEnabled) return;
   try {
     const { status } = await Notifications.requestPermissionsAsync();
     if (status !== "granted") return;

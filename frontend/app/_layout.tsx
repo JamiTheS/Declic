@@ -10,14 +10,14 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import { useIconFonts } from "@/src/hooks/use-icon-fonts";
 import { ThemeProvider, useTheme } from "@/src/theme/ThemeContext";
 import { AppProvider } from "@/src/context/AppContext";
 import { CatalogProvider } from "@/src/context/CatalogContext";
 import { initializeRevenueCat, SubscriptionProvider } from "@/src/lib/revenuecat";
-import { registerForPush } from "@/src/lib/push";
+import { registerForPush, pushEnabled } from "@/src/lib/push";
 import { storage } from "@/src/utils/storage";
 
 // Disable logbox errors etc so that users can see the app
@@ -138,7 +138,9 @@ function ThemedChrome() {
       if (response) routeFromData(response.notification.request.content.data || {});
     });
 
-    // Weekly nudge for users who permanently denied notifications.
+    // Weekly nudge for users who permanently denied notifications — pointless
+    // (and pushy) while no relay is configured to send anything.
+    if (!pushEnabled) return () => { tapSub.remove(); };
     (async () => {
       const { status, canAskAgain } = await Notifications.getPermissionsAsync();
       if (status !== "denied" || canAskAgain) return;

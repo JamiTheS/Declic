@@ -3,18 +3,14 @@ import { useMemo } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/src/context/AppContext";
 import { useCatalog } from "@/src/context/CatalogContext";
 import { useTheme } from "@/src/theme/ThemeContext";
 import { FONTS, SPACING, RADIUS, MODE_META, hexAlpha, Colors } from "@/src/theme/tokens";
 import { Ambiance } from "@/src/types";
-
-const SOIREE_IMG =
-  "https://images.unsplash.com/photo-1763322564752-12ce8fae2bfe?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHwxfHxuZW9uJTIwcGFydHklMjBjcm93ZCUyMGFic3RyYWN0JTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3ODY3NTkyNDd8MA&ixlib=rb-4.1.0&q=85";
 
 const GRID_MODES = [
   "qui-est-le-plus", "je-nai-jamais", "bombe", "action-verite",
@@ -113,9 +109,16 @@ export default function Hub() {
           }}
           testID="mode-soiree"
         >
-          <Image source={{ uri: SOIREE_IMG }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          {/* Backdrop is drawn, not fetched: the hub's flagship card must never
+              render empty on a cold or offline launch. */}
           <LinearGradient
-            colors={["rgba(11,11,14,0.15)", "rgba(11,11,14,0.7)", "rgba(11,11,14,0.97)"]}
+            colors={[hexAlpha(colors.brand, 0.6), "#3A1B3F", "#141018"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={["rgba(11,11,14,0.05)", "rgba(11,11,14,0.6)", "rgba(11,11,14,0.96)"]}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.featuredContent}>

@@ -1,7 +1,7 @@
  
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Pressable, Animated, Easing, ScrollView, Dimensions } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as Haptics from "expo-haptics";
 import { Card, Player } from "@/src/types";
 import { FONTS, RADIUS, MODE_META, HEALTH_MSG, ModePalette } from "@/src/theme/tokens";

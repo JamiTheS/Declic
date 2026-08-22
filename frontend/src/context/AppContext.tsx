@@ -106,7 +106,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         storage.getItem(K.age, false),
         storage.getItem(K.players, "[]"),
         storage.getItem(K.sober, false),
-        storage.getItem(K.ambiance, "standard"),
+        // Typed as a plain string: the stored value is any Ambiance, not just
+        // the literal fallback TypeScript would otherwise infer.
+        storage.getItem<string>(K.ambiance, "standard"),
         storage.getItem(K.haptics, true),
         storage.getItem(K.sound, false),
         storage.getItem(K.testUnlock, false),
