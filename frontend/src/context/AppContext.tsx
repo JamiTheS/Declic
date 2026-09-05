@@ -43,8 +43,6 @@ type AppCtx = {
   removePlayer: (id: string) => void;
   clearPlayers: () => void;
 
-  soberMode: boolean;
-  setSoberMode: (v: boolean) => void;
   ambiance: Ambiance;
   setAmbiance: (a: Ambiance) => void;
   haptics: boolean;
@@ -71,7 +69,6 @@ const Ctx = createContext<AppCtx>({} as AppCtx);
 const K = {
   age: "declic.ageVerified",
   players: "declic.players",
-  sober: "declic.sober",
   ambiance: "declic.ambiance",
   haptics: "declic.haptics",
   sound: "declic.sound",
@@ -87,7 +84,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [ageVerified, setAgeVerified] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [soberMode, setSoberModeState] = useState(false);
   const [ambiance, setAmbianceState] = useState<Ambiance>("standard");
   const [haptics, setHapticsState] = useState(true);
   const [soundEnabled, setSoundEnabledState] = useState(false);
@@ -102,10 +98,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const [age, savedPlayers, sober, amb, hap, snd, tu] = await Promise.all([
+      const [age, savedPlayers, amb, hap, snd, tu] = await Promise.all([
         storage.getItem(K.age, false),
         storage.getItem(K.players, "[]"),
-        storage.getItem(K.sober, false),
         // Typed as a plain string: the stored value is any Ambiance, not just
         // the literal fallback TypeScript would otherwise infer.
         storage.getItem<string>(K.ambiance, "standard"),
@@ -118,7 +113,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const p = JSON.parse((savedPlayers as string) || "[]");
         if (Array.isArray(p)) setPlayers(p);
       } catch {}
-      setSoberModeState(!!sober);
       if (amb === "chill" || amb === "standard" || amb === "chaud") setAmbianceState(amb);
       setHapticsState(hap === null ? true : !!hap);
       setSoundEnabledState(!!snd);
@@ -164,10 +158,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const clearPlayers = useCallback(() => persistPlayers([]), []);
 
-  const setSoberMode = useCallback((v: boolean) => {
-    setSoberModeState(v);
-    storage.setItem(K.sober, v);
-  }, []);
   const setAmbiance = useCallback((a: Ambiance) => {
     setAmbianceState(a);
     storage.setItem(K.ambiance, a);
@@ -219,8 +209,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addPlayer,
         removePlayer,
         clearPlayers,
-        soberMode,
-        setSoberMode,
         ambiance,
         setAmbiance,
         haptics,

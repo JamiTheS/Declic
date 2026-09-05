@@ -68,7 +68,7 @@ function composition(n: number): { impostors: number; whites: number } {
 export default function Imposteur() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { players, haptics, soberMode, isPremium } = useApp();
+  const { players, haptics, isPremium } = useApp();
   const { cards } = useCatalog();
   const { colors } = useTheme();
   const pal = useMemo(() => modePalette("imposteur", colors), [colors]);
@@ -549,7 +549,7 @@ export default function Imposteur() {
   // ---- Game over ----
   const traitors = players.filter((_, i) => roles[i] && roles[i] !== "civil");
   const groupLoses = outcome === "bad" || impostorRedeemed;
-  const gageText = soberMode ? card?.alternative : card?.gage;
+  const gageText = card?.gage;
   const headline = whiteWon
     ? "Mister White a tout deviné 😈"
     : outcome === "bad"

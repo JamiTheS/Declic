@@ -13,7 +13,7 @@ const CONTACT_EMAIL = "damiendchps@gmail.com";
 
 const SECTIONS: { title: string; body: string }[] = [
   { title: "En bref", body: "Déclic Party est un jeu d'ambiance sans compte. On ne te demande ni email, ni numéro, ni identifiant, et aucun compte n'est créé." },
-  { title: "Ce qui reste sur ton téléphone", body: "Les prénoms des joueurs, tes réglages (mode sans alcool, haptique, sons, thème) et ton statut Premium sont stockés uniquement sur ton appareil. Rien de tout cela ne quitte le téléphone. Tu peux tout effacer en désinstallant l'app." },
+  { title: "Ce qui reste sur ton téléphone", body: "Les prénoms des joueurs, tes réglages (haptique, sons, thème) et ton statut Premium sont stockés uniquement sur ton appareil. Rien de tout cela ne quitte le téléphone. Tu peux tout effacer en désinstallant l'app." },
   { title: "Aucun serveur, aucune analyse", body: "Nous n'exploitons aucun serveur qui collecterait tes données. Les questions sont intégrées à l'application : le jeu fonctionne intégralement hors-ligne et n'envoie aucune statistique d'usage." },
   { title: "Confessions et réponses", body: "Ce que vous écrivez ou dites pendant une partie (confessions, votes, secrets) n'existe que le temps de la manche, en mémoire. Rien n'est enregistré sur l'appareil ni transmis où que ce soit." },
   { title: "Abonnement Premium", body: "Les abonnements sont gérés par l'App Store et par notre prestataire RevenueCat, qui reçoit un identifiant d'installation anonyme et l'état de ton abonnement afin de débloquer le contenu sur ton appareil. Cet identifiant n'est lié à aucune donnée personnelle, et nous ne voyons jamais tes informations de paiement." },

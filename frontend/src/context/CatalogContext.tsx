@@ -32,9 +32,10 @@ const Ctx = createContext<CatalogCtx>({
   refresh: async () => {},
 });
 
-// v4: the embedded pack now carries the full catalog. Bumped so a cache written
-// against the old backend can't shadow it on existing installs.
-const CACHE_KEY = "declic.catalog.v4";
+// v5: alcohol fully removed from the catalog (Apple 4.3(b) fix). Bumped so any
+// cache written against an older, alcohol-bearing catalog is invalidated on
+// existing installs and can never shadow the clean embedded pack.
+const CACHE_KEY = "declic.catalog.v5";
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [cards, setCards] = useState<Card[]>(SEED_CARDS);

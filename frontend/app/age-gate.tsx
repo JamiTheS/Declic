@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/src/context/AppContext";
 import { useTheme } from "@/src/theme/ThemeContext";
-import { FONTS, SPACING, HEALTH_MSG, hexAlpha, Colors } from "@/src/theme/tokens";
+import { FONTS, SPACING, hexAlpha, Colors } from "@/src/theme/tokens";
 import PrimaryButton from "@/src/components/PrimaryButton";
 
 export default function AgeGate() {
@@ -54,7 +54,6 @@ export default function AgeGate() {
       </View>
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 24 }]}>
-        <Text style={styles.health}>{HEALTH_MSG}</Text>
         <PrimaryButton label="OUI, J'AI 18 ANS OU PLUS" onPress={onYes} testID="age-yes-button" haptic="heavy" />
         <Pressable onPress={onNo} style={styles.noBtn} testID="age-no-button">
           <Text style={styles.noText}>Non, j'ai moins de 18 ans</Text>
@@ -73,7 +72,6 @@ const makeStyles = (c: Colors) =>
     title: { fontFamily: FONTS.display, color: c.onSurface, fontSize: 48, lineHeight: 52 },
     subtitle: { fontFamily: FONTS.body, color: c.onSurfaceSecondary, fontSize: 17, lineHeight: 26, marginTop: 20 },
     bottom: { gap: 14 },
-    health: { fontFamily: FONTS.bodyRegular, color: c.muted, fontSize: 12, textAlign: "center", marginBottom: 4 },
     noBtn: { minHeight: 48, alignItems: "center", justifyContent: "center" },
     noText: { fontFamily: FONTS.body, color: c.muted, fontSize: 15 },
     blockCenter: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },

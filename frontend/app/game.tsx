@@ -37,7 +37,7 @@ export default function Game() {
   const { mode, preset, vibe } = useLocalSearchParams<{ mode: string; preset?: string; vibe?: string }>();
   const { colors } = useTheme();
   const {
-    players, ambiance, soberMode, isPremium, haptics, soundEnabled,
+    players, ambiance, isPremium, haptics, soundEnabled,
     recordCard, recordReveal, recordVote, recordCorrect, recordPass,
   } = useApp();
   const { cards } = useCatalog();
@@ -159,15 +159,15 @@ export default function Game() {
     if (locked) return <LockedContent onUnlock={() => router.push("/paywall")} onSkip={pass} pal={pal} />;
     switch (card.mode) {
       case "qui-est-le-plus":
-        return <VoteContent key={card.id} card={card} players={players} sober={soberMode} onDone={next} recordVote={recordVote} haptics={haptics} pal={pal} />;
+        return <VoteContent key={card.id} card={card} players={players} onDone={next} recordVote={recordVote} haptics={haptics} pal={pal} />;
       case "tu-me-connais":
         return <PairContent key={card.id} card={card} targets={targets[index] ?? players.slice(0, 2)} onDone={next} recordCorrect={recordCorrect} haptics={haptics} pal={pal} />;
       case "le-verdict":
-        return <VerdictContent key={card.id} card={card} players={players} target={targets[index]?.[0] ?? players[0]} sober={soberMode} onDone={next} haptics={haptics} pal={pal} />;
+        return <VerdictContent key={card.id} card={card} players={players} target={targets[index]?.[0] ?? players[0]} onDone={next} haptics={haptics} pal={pal} />;
       case "bombe":
-        return <BombeContent key={card.id} card={card} sober={soberMode} pal={pal} haptics={haptics} sound={soundEnabled} onDone={next} />;
+        return <BombeContent key={card.id} card={card} pal={pal} haptics={haptics} sound={soundEnabled} onDone={next} />;
       default:
-        return <TextContent key={card.id} card={card} target={targets[index]?.[0]} sober={soberMode} pal={pal} />;
+        return <TextContent key={card.id} card={card} target={targets[index]?.[0]} pal={pal} />;
     }
   };
 

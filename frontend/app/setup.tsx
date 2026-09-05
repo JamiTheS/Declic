@@ -23,7 +23,7 @@ export default function Setup() {
   const insets = useSafeAreaInsets();
   const { edit } = useLocalSearchParams<{ edit?: string }>();
   const isEdit = edit === "1";
-  const { players, addPlayer, removePlayer, soberMode, setSoberMode } = useApp();
+  const { players, addPlayer, removePlayer } = useApp();
   const { colors } = useTheme();
   const [value, setValue] = useState("");
   const [error, setError] = useState(false);
@@ -124,21 +124,6 @@ export default function Setup() {
 
       <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
         <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-          <Pressable style={styles.soberRow} onPress={() => setSoberMode(!soberMode)} testID="sober-toggle">
-            <View
-              style={[
-                styles.soberBox,
-                { backgroundColor: soberMode ? colors.success : "transparent", borderColor: soberMode ? colors.success : colors.borderStrong },
-              ]}
-            >
-              {soberMode && <MaterialCommunityIcons name="check" size={16} color="#fff" />}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.soberTitle}>Mode sans alcool</Text>
-              <Text style={styles.soberSub}>Remplace tous les gages par des alternatives</Text>
-            </View>
-            <MaterialCommunityIcons name="glass-cocktail-off" size={22} color={soberMode ? colors.success : colors.muted} />
-          </Pressable>
           <PrimaryButton
             label={isEdit ? "ENREGISTRER" : `C'EST PARTI${players.length >= 2 ? ` · ${players.length} JOUEURS` : ""}`}
             onPress={start}
@@ -201,8 +186,4 @@ const makeStyles = (c: Colors) =>
       borderTopColor: c.border,
       gap: 16,
     },
-    soberRow: { flexDirection: "row", alignItems: "center", gap: 14 },
-    soberBox: { width: 28, height: 28, borderRadius: 8, borderWidth: 2, alignItems: "center", justifyContent: "center" },
-    soberTitle: { fontFamily: FONTS.bodyBold, color: c.onSurface, fontSize: 16 },
-    soberSub: { fontFamily: FONTS.bodyRegular, color: c.muted, fontSize: 12, marginTop: 2 },
   });

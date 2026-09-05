@@ -121,9 +121,9 @@ export const MODE_META: Record<
 // Short "how to play" notice per game mode — shown via the in-game (?) button.
 export const HOW_TO_PLAY: Record<string, string> = {
   "qui-est-le-plus":
-    "Lis la question à voix haute. À 3, tout le monde pointe la personne qui correspond le plus. La plus désignée assume le gage (ou son alternative sans alcool).",
+    "Lis la question à voix haute. À 3, tout le monde pointe la personne qui correspond le plus. La plus désignée relève le défi du groupe.",
   "je-nai-jamais":
-    "Lis l'affirmation. Tous ceux qui l'ont déjà fait boivent une gorgée — ou révèlent un secret de plus en mode sans alcool.",
+    "Lis l'affirmation. Tous ceux qui l'ont déjà fait racontent leur histoire au groupe.",
   "action-verite":
     "La personne visée choisit : elle réalise l'Action, ou répond en toute honnêteté à la Vérité. Elle refuse ? C'est gage.",
   "cash-ou-cash":
@@ -175,5 +175,3 @@ export function hexAlpha(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export const HEALTH_MSG =
-  "L'abus d'alcool est dangereux pour la santé, à consommer avec modération.";

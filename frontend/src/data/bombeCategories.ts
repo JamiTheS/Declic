@@ -1,8 +1,7 @@
 import { Card } from "@/src/types";
 
 // Fallback gage when a "bombe" card has no gage set in Airtable.
-export const DEFAULT_BOMBE_GAGE = "Prends une gorgée 🍺";
-export const DEFAULT_BOMBE_ALT =
+export const DEFAULT_BOMBE_GAGE =
   "Relève un mini-défi choisi par le groupe (ou 10 pompes) 💪";
 
 // Built-in categories so La Bombe is always playable, even before any
@@ -13,7 +12,7 @@ const CATS: { t: string; i: number }[] = [
   { t: "Une marque de voiture", i: 1 },
   { t: "Un pays d'Europe", i: 1 },
   { t: "Un dessin animé de ton enfance", i: 1 },
-  { t: "Une boisson qu'on commande en soirée", i: 1 },
+  { t: "Une chose qu'on emmène toujours en soirée", i: 1 },
   { t: "Un métier de rêve", i: 2 },
   { t: "Une excuse bidon pour rentrer plus tôt", i: 2 },
   { t: "Un truc qu'on trouve toujours dans un frigo", i: 2 },
@@ -41,7 +40,7 @@ export function buildDefaultBombeDeck(count = 14): Card[] {
     mode: "bombe" as const,
     texte: c.t,
     gage: DEFAULT_BOMBE_GAGE,
-    alternative: DEFAULT_BOMBE_ALT,
+    alternative: "",
     intensite: c.i,
     tags_theme: [],
     packs: [],

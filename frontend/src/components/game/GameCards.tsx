@@ -4,13 +4,7 @@ import { View, Text, StyleSheet, Pressable, Animated, Easing, ScrollView, Dimens
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as Haptics from "expo-haptics";
 import { Card, Player } from "@/src/types";
-import { FONTS, RADIUS, MODE_META, HEALTH_MSG, ModePalette } from "@/src/theme/tokens";
-
-function gageInfo(card: Card, sober: boolean) {
-  const isAlcool = /gorg|bois/i.test(card.gage);
-  const text = sober || !isAlcool ? card.alternative : card.gage;
-  return { text, alt: card.alternative, isAlcool: isAlcool && !sober };
-}
+import { FONTS, RADIUS, MODE_META, ModePalette } from "@/src/theme/tokens";
 
 /**
  * Shared card skeleton — three flex zones (top / middle / bottom), NO absolute
@@ -70,8 +64,8 @@ export function TargetPill({ player, label, pal }: { player: Player; label?: str
   );
 }
 
-export function GageBanner({ card, sober, pal }: { card: Card; sober: boolean; pal: ModePalette }) {
-  const { text, alt, isAlcool } = gageInfo(card, sober);
+export function GageBanner({ card, pal }: { card: Card; pal: ModePalette }) {
+  if (!card.gage) return null;
   return (
     <View style={styles.gageWrap}>
       <View style={[styles.gageBox, { backgroundColor: pal.overlay, borderColor: pal.overlayBorder }]}>
@@ -79,10 +73,8 @@ export function GageBanner({ card, sober, pal }: { card: Card; sober: boolean; p
           <MaterialCommunityIcons name="target" size={11} color={pal.muted} />
           <Text style={[styles.gageLabel, { color: pal.muted }]}>SINON, GAGE</Text>
         </View>
-        <Text style={[styles.gageText, { color: pal.fg }]}>{text}</Text>
-        {isAlcool && <Text style={[styles.gageAlt, { color: pal.muted }]}>ou : {alt}</Text>}
+        <Text style={[styles.gageText, { color: pal.fg }]}>{card.gage}</Text>
       </View>
-      {isAlcool && <Text style={[styles.health, { color: pal.faint }]}>{HEALTH_MSG}</Text>}
     </View>
   );
 }
@@ -107,13 +99,11 @@ function ActionButton({ label, onPress, pal, testID }: { label: string; onPress:
 export function TextContent({
   card,
   target,
-  sober,
   pal,
   targetLabel = "À toi,",
 }: {
   card: Card;
   target?: Player;
-  sober: boolean;
   pal: ModePalette;
   targetLabel?: string;
 }) {
@@ -132,7 +122,7 @@ export function TextContent({
           )}
         </>
       }
-      bottom={<GageBanner card={card} sober={sober} pal={pal} />}
+      bottom={<GageBanner card={card} pal={pal} />}
     >
       {isDilemma ? (
         <View style={styles.dilemmaBlock}>
@@ -217,7 +207,6 @@ export function VerdictContent({
   card,
   players,
   target,
-  sober,
   onDone,
   haptics,
   pal,
@@ -225,7 +214,6 @@ export function VerdictContent({
   card: Card;
   players: Player[];
   target: Player;
-  sober: boolean;
   onDone: () => void;
   haptics: boolean;
   pal: ModePalette;
@@ -274,7 +262,7 @@ export function VerdictContent({
           top={<ModeTag mode={card.mode} pal={pal} />}
           bottom={
             <>
-              <GageBanner card={card} sober={sober} pal={pal} />
+              <GageBanner card={card} pal={pal} />
               <ActionButton label="CARTE SUIVANTE" onPress={onDone} pal={pal} testID="verdict-next" />
             </>
           }
@@ -352,7 +340,6 @@ export function VerdictContent({
 export function VoteContent({
   card,
   players,
-  sober,
   onDone,
   recordVote,
   haptics,
@@ -360,7 +347,6 @@ export function VoteContent({
 }: {
   card: Card;
   players: Player[];
-  sober: boolean;
   onDone: () => void;
   recordVote: (id: string) => void;
   haptics: boolean;
@@ -381,7 +367,7 @@ export function VoteContent({
       bottom={
         chosen ? (
           <>
-            <GageBanner card={card} sober={sober} pal={pal} />
+            <GageBanner card={card} pal={pal} />
             <ActionButton label="CARTE SUIVANTE" onPress={onDone} pal={pal} testID="vote-next" />
           </>
         ) : undefined
@@ -557,8 +543,6 @@ const styles = StyleSheet.create({
   gageLabelRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   gageLabel: { fontFamily: FONTS.bodyBold, fontSize: 11, letterSpacing: 1.5 },
   gageText: { fontFamily: FONTS.displaySemi, fontSize: 17, textAlign: "center", marginTop: 4 },
-  gageAlt: { fontFamily: FONTS.body, fontSize: 13, marginTop: 4, textAlign: "center" },
-  health: { fontFamily: FONTS.bodyRegular, fontSize: 10, textAlign: "center", paddingHorizontal: 20 },
 
   dilemmaBlock: { gap: 8, alignItems: "stretch" },
   dilemmaOption: { borderRadius: RADIUS.md, padding: 18, borderWidth: 1 },

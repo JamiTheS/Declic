@@ -8,7 +8,7 @@ import { useApp } from "@/src/context/AppContext";
 import { useSubscription } from "@/src/lib/revenuecat";
 import { presentCustomerCenter, revenueCatUIAvailable } from "@/src/lib/revenuecatUI";
 import { useTheme } from "@/src/theme/ThemeContext";
-import { FONTS, SPACING, RADIUS, HEALTH_MSG, Colors } from "@/src/theme/tokens";
+import { FONTS, SPACING, RADIUS, Colors } from "@/src/theme/tokens";
 
 function Row({ icon, title, subtitle, right, onPress, testID, c }: {
   icon: string; title: string; subtitle?: string; right?: React.ReactNode; onPress?: () => void; testID?: string; c: Colors;
@@ -32,7 +32,7 @@ export default function Settings() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
-    soberMode, setSoberMode, haptics, setHaptics, soundEnabled, setSoundEnabled, isPremium,
+    haptics, setHaptics, soundEnabled, setSoundEnabled, isPremium,
     testUnlockEnabled, testUnlock, setTestUnlock,
   } = useApp();
   const { restore, isRestoring } = useSubscription();
@@ -66,9 +66,6 @@ export default function Settings() {
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40, paddingHorizontal: SPACING.lg }}>
         <Text style={styles.section}>Jeu</Text>
         <View style={styles.card}>
-          <Row c={colors} icon="glass-cocktail-off" title="Mode sans alcool" subtitle="Remplace les gages par des alternatives"
-            right={<Switch value={soberMode} onValueChange={setSoberMode} trackColor={{ true: colors.success, false: colors.borderStrong }} thumbColor="#fff" testID="settings-sober-switch" />} />
-          <View style={styles.divider} />
           <Row c={colors} icon="vibrate" title="Retours haptiques"
             right={<Switch value={haptics} onValueChange={setHaptics} trackColor={{ true: colors.brand, false: colors.borderStrong }} thumbColor="#fff" testID="settings-haptics-switch" />} />
           <View style={styles.divider} />
@@ -111,9 +108,6 @@ export default function Settings() {
             right={<MaterialCommunityIcons name="chevron-right" size={20} color={colors.muted} />} testID="settings-privacy" />
         </View>
 
-        <View style={styles.healthBox}>
-          <Text style={styles.healthText}>{HEALTH_MSG}</Text>
-        </View>
         <Text style={styles.version}>Déclic · v{Constants.expoConfig?.version ?? "1.0.0"}</Text>
       </ScrollView>
 
@@ -174,8 +168,6 @@ const makeStyles = (c: Colors) =>
     rowTitle: { fontFamily: FONTS.bodyBold, color: c.onSurface, fontSize: 16 },
     rowSub: { fontFamily: FONTS.bodyRegular, color: c.muted, fontSize: 12, marginTop: 2 },
     divider: { height: 1, backgroundColor: c.border, marginLeft: 70 },
-    healthBox: { marginTop: 28, padding: 14, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: c.border },
-    healthText: { fontFamily: FONTS.bodyRegular, color: c.muted, fontSize: 12, textAlign: "center", lineHeight: 18 },
     version: { fontFamily: FONTS.body, color: c.muted, fontSize: 12, textAlign: "center", marginTop: 20 },
     modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", alignItems: "center", justifyContent: "center", padding: SPACING.lg },
     modalCard: { width: "100%", maxWidth: 380, backgroundColor: c.surfaceSecondary, borderRadius: 24, borderWidth: 1, borderColor: c.border, padding: 24, alignItems: "center" },

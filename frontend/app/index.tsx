@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, Animated, Easing } from "rea
 import { useRouter } from "expo-router";
 import { useApp } from "@/src/context/AppContext";
 import { useTheme } from "@/src/theme/ThemeContext";
-import { FONTS, HEALTH_MSG, hexAlpha } from "@/src/theme/tokens";
+import { FONTS, hexAlpha } from "@/src/theme/tokens";
 
 export default function Index() {
   const router = useRouter();
@@ -44,7 +44,6 @@ export default function Index() {
       </Animated.View>
       <View style={styles.footer}>
         <ActivityIndicator color={colors.brand} />
-        <Text style={[styles.health, { color: colors.faint }]}>{HEALTH_MSG}</Text>
       </View>
     </View>
   );
@@ -65,7 +64,6 @@ const styles = StyleSheet.create({
   rule: { width: 40, height: 3, borderRadius: 2, marginTop: 18 },
   tagline: { fontFamily: FONTS.body, fontSize: 15, marginTop: 18, letterSpacing: 0.2 },
   footer: { position: "absolute", bottom: 40, alignItems: "center", gap: 16, paddingHorizontal: 32 },
-  health: { fontFamily: FONTS.bodyRegular, fontSize: 11, textAlign: "center" },
 });
 
 // touch to force metro re-add

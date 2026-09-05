@@ -6,7 +6,7 @@ import { Card } from "@/src/types";
 import { FONTS, RADIUS, ModePalette } from "@/src/theme/tokens";
 import { GageBanner, ModeTag, Confetti } from "./GameCards";
 import { useBombeSounds } from "@/src/hooks/use-bombe-sounds";
-import { DEFAULT_BOMBE_GAGE, DEFAULT_BOMBE_ALT } from "@/src/data/bombeCategories";
+import { DEFAULT_BOMBE_GAGE } from "@/src/data/bombeCategories";
 
 /**
  * La Bombe — a hidden, random timer. Players pass the phone around, one answer
@@ -17,14 +17,12 @@ import { DEFAULT_BOMBE_GAGE, DEFAULT_BOMBE_ALT } from "@/src/data/bombeCategorie
  */
 export function BombeContent({
   card,
-  sober,
   pal,
   haptics,
   sound,
   onDone,
 }: {
   card: Card;
-  sober: boolean;
   pal: ModePalette;
   haptics: boolean;
   sound: boolean;
@@ -39,11 +37,10 @@ export function BombeContent({
   const shake = useRef(new Animated.Value(0)).current;
   const boomPop = useRef(new Animated.Value(0)).current;
 
-  // Normalised gage (fallback to defaults when the Airtable card has none).
+  // Normalised gage (fallback to default when the Airtable card has none).
   const gageCard: Card = {
     ...card,
     gage: card.gage || DEFAULT_BOMBE_GAGE,
-    alternative: card.alternative || DEFAULT_BOMBE_ALT,
   };
 
   // Pick a hidden random duration; the range tightens as intensity rises.
@@ -135,7 +132,7 @@ export function BombeContent({
             </Text>
           </View>
           <View style={styles.bottomZone}>
-            <GageBanner card={gageCard} sober={sober} pal={pal} />
+            <GageBanner card={gageCard} pal={pal} />
             <Pressable
               style={({ pressed }) => [styles.nextBtn, { backgroundColor: pal.color, transform: [{ scale: pressed ? 0.97 : 1 }] }]}
               onPress={onDone}

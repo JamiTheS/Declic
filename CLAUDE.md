@@ -9,7 +9,7 @@
 
 Un **party game social** mobile (iOS + Android, + web) pour groupes d'amis (18-25 ans, marché francophone/France). Des jeux ultra-simples qui **font se découvrir les gens** (fiertés, hontes, opinions cash, intime) et **créent de vraies connexions**. Tagline : « Le jeu qui révèle tes potes ».
 
-**Positionnement critique — CE N'EST PAS UNE APP D'ALCOOL.** C'est un « jeu d'ambiance / brise-glace ». L'alcool n'est qu'**une option de gage**, jamais le sujet. Chaque gage alcoolisé a **toujours** une alternative sans alcool. Cette distinction est vitale pour passer la validation stores (Apple Guideline 4.3 & 1.4.3) et respecter la Loi Évin.
+**Positionnement critique — CE N'EST PAS UNE APP D'ALCOOL. ZÉRO ALCOOL DANS L'APP.** C'est un « jeu d'ambiance / brise-glace / défis ». Depuis le rejet Apple **Guideline 4.3(b)** (31/08/2026 — « primarily a drinking game »), **toute référence à l'alcool a été retirée** du catalogue et du code : les gages sont désormais des **défis, révélations et mini-challenges** choisis par le groupe. Plus de mode « sans alcool » (devenu inutile), plus de message Loi Évin. Ne JAMAIS réintroduire de gage à boire, de mention alcool/gorgée/verre, ni dans le contenu, ni dans les métadonnées store (nom/sous-titre/mots-clés/description/captures).
 
 **Différenciateurs :** (1) moteur d'escalade « le DJ » qui monte l'intensité tout seul ; (2) catalogue de questions **piloté à distance** (éditable sans re-soumettre l'app) ; (3) mécaniques originales (Le Verdict = vote anonyme, Récap partageable) ; (4) « Drunk UX » (simplicité radicale).
 
@@ -19,10 +19,10 @@ Un **party game social** mobile (iOS + Android, + web) pour groupes d'amis (18-2
 
 ## 2. CONTRAINTES NON NÉGOCIABLES (priment sur tout)
 
-- **Apple 4.3 (spam)** : démontrer une vraie valeur (moteur d'escalade, mécaniques originales, catalogue riche). **Apple 1.4.3** : aucune mention d'alcool dans nom/sous-titre/mots-clés/description/captures.
+- **Apple 4.3(b) (spam / drinking game)** — REJET du 31/08/2026 : l'app a été jugée « primarily a drinking game ». **Correctif appliqué : suppression totale de l'alcool.** Aucun gage à boire, aucune mention alcool nulle part (contenu, code, métadonnées). Les gages sont des défis/révélations/mini-challenges. Démontrer une vraie valeur (moteur d'escalade, mécaniques originales, catalogue riche).
 - **Contenu Hot : SUGGESTIF, jamais explicite.** On évoque désir, attirance, tension, un fantasme par allusion. **Aucune** description de pratique sexuelle, aucun accessoire, aucun acte explicite. **Zéro age play, zéro contenu impliquant des mineurs** (ligne rouge absolue → ban + risque juridique). Objectif : rester validable App Store (qui interdit le porno, Guideline 1.1.4) ET Google Play.
-- **Loi Évin** : message sanitaire « L'abus d'alcool est dangereux pour la santé, à consommer avec modération » (splash + réglages + quand un gage alcoolisé s'affiche). Mode « Sans alcool » (sober) activable. Jamais associer alcool ↔ succès/sexe/sport.
-- **Âge** : gate 18+ au 1er lancement. Classification 17+/18+.
+- **Alcool : INTERDIT dans l'app.** Ne jamais réintroduire de gage à boire ni de référence à l'alcool. (Il n'y a plus de mode « sans alcool » ni de message Loi Évin — devenus sans objet.)
+- **Âge** : gate 18+ au 1er lancement (contenu cash/intime). Classification 17+/18+.
 - **RGPD** : zéro compte, prénoms stockés en **local uniquement**. Aucune donnée perso envoyée au serveur.
 
 ---
