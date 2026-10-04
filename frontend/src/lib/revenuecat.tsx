@@ -63,6 +63,7 @@ export function initializeRevenueCat() {
 function useSubscriptionState() {
   const queryClient = useQueryClient();
   const [identityError, setIdentityError] = useState<string | null>(null);
+  const [appUserId, setAppUserId] = useState<string | null>(null);
 
   const customerInfoQuery = useQuery({
     queryKey: ["revenuecat", "customer-info"],
@@ -88,8 +89,10 @@ function useSubscriptionState() {
       try {
         const id = await getInstallId();
         const { customerInfo } = await Purchases.logIn(id);
+        const currentId = await Purchases.getAppUserID();
         if (mounted) {
           queryClient.setQueryData(["revenuecat", "customer-info"], customerInfo);
+          setAppUserId(currentId);
           setIdentityError(null);
         }
       } catch (e) {
@@ -112,7 +115,7 @@ function useSubscriptionState() {
 
   const purchaseMutation = useMutation({
     mutationFn: async (pkg: PurchasesPackage) => {
-      const id = (await Purchases.getCustomerInfo()).originalAppUserId;
+      const id = await Purchases.getAppUserID();
       if (id.startsWith("$RCAnonymousID:")) throw new Error("identity_not_ready");
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       return customerInfo;
@@ -141,9 +144,11 @@ function useSubscriptionState() {
     activeEntitlements[REVENUECAT_ENTITLEMENT_IDENTIFIER] !== undefined ||
     Object.keys(activeEntitlements).length > 0;
 
-  const originalAppUserId = customerInfoQuery.data?.originalAppUserId;
-  const identityReady =
-    !!originalAppUserId && !originalAppUserId.startsWith("$RCAnonymousID:");
+  // The CURRENT app user id, not customerInfo.originalAppUserId: RevenueCat
+  // keeps "original" pointing at the first id this customer ever had, which is
+  // the anonymous one Purchases.configure() mints before logIn runs. Reading it
+  // here left identityReady false forever and disabled the subscribe button.
+  const identityReady = !!appUserId && !appUserId.startsWith("$RCAnonymousID:");
 
   const packages = offeringsQuery.data?.current?.availablePackages ?? [];
 
