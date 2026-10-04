@@ -158,6 +158,7 @@ function useSubscriptionState() {
     simulatedStore,
     isLoading: customerInfoQuery.isLoading || offeringsQuery.isLoading,
     offeringsError: offeringsQuery.isError,
+    refreshOfferings: offeringsQuery.refetch,
     purchase: purchaseMutation.mutateAsync,
     restore: restoreMutation.mutateAsync,
     isPurchasing: purchaseMutation.isPending,

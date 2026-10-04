@@ -95,6 +95,7 @@ export default function Paywall() {
     isLoading,
     simulatedStore,
     rcEnabled,
+    refreshOfferings,
   } = useSubscription();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -250,9 +251,15 @@ export default function Paywall() {
           <View style={styles.unavailable} testID="paywall-unavailable">
             <MaterialCommunityIcons name="storefront-outline" size={26} color={colors.muted} />
             <Text style={styles.unavailableText}>
-              La boutique n'est pas disponible dans l'aperçu Expo Go. Les abonnements se testent
-              uniquement sur un build de développement ou une app publiée (App Store / Google Play).
+              {simulatedStore
+                ? "La boutique n'est pas disponible dans l'aperçu Expo Go. Les abonnements se testent uniquement sur un build de développement ou une app publiée (App Store / Google Play)."
+                : "Les offres ne se chargent pas pour le moment. Vérifie ta connexion et réessaie — tu peux aussi restaurer un achat existant ci-dessous."}
             </Text>
+            {!simulatedStore && (
+              <Pressable onPress={() => { refreshOfferings().catch(() => {}); }} testID="paywall-retry" hitSlop={8}>
+                <Text style={styles.legalLink}>Réessayer</Text>
+              </Pressable>
+            )}
           </View>
         )}
 
