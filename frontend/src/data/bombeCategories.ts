@@ -27,9 +27,9 @@ const CATS: { t: string; i: number }[] = [
   { t: "Un truc qu'on cache à ses parents", i: 4 },
   { t: "Une pire idée à 3h du mat", i: 4 },
   { t: "Un endroit insolite pour un date", i: 4 },
-  { t: "Un truc qu'on a déjà fait un peu éméché", i: 4 },
+  { t: "Un truc qu'on a déjà fait sur un coup de tête", i: 4 },
   { t: "Une réplique de drague qui tue", i: 5 },
-  { t: "Un truc qu'on n'avouerait jamais sobre", i: 5 },
+  { t: "Un truc qu'on n'avouerait jamais en public", i: 5 },
   { t: "Une bêtise dont on n'est pas fier", i: 5 },
 ];
 
