@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Modal, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,7 +10,6 @@ import { useTheme } from "@/src/theme/ThemeContext";
 import { FONTS, SPACING, RADIUS, hexAlpha, Colors } from "@/src/theme/tokens";
 import PrimaryButton from "@/src/components/PrimaryButton";
 import { useSubscription } from "@/src/lib/revenuecat";
-import { presentRevenueCatPaywall, revenueCatUIAvailable } from "@/src/lib/revenuecatUI";
 
 const PERKS = [
   "Tous les modes premium (Le Verdict, Tu me connais, Hot)",
@@ -121,21 +120,6 @@ export default function Paywall() {
       return () => clearTimeout(t);
     }
   }, [isSubscribed, router]);
-
-  // Native builds: present the RevenueCat-hosted Paywall once. If the user
-  // completes or cancels there, we fall back to the coded screen below.
-  const rcPaywallShown = useRef(false);
-  useEffect(() => {
-    if (!revenueCatUIAvailable || rcPaywallShown.current) return;
-    rcPaywallShown.current = true;
-    (async () => {
-      const subscribed = await presentRevenueCatPaywall();
-      if (subscribed) {
-        if (router.canGoBack()) router.back();
-        else router.replace("/hub");
-      }
-    })();
-  }, [router]);
 
   const selectedPkg = packages.find((p) => p.identifier === selected) || null;
   const hasOffers = packages.length > 0;
