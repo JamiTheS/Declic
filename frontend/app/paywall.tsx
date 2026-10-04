@@ -38,7 +38,8 @@ function pkgTitle(pkg: PurchasesPackage): string {
   return PKG_TITLE[pkg.packageType] || pkg.product.title || pkg.identifier;
 }
 
-function trialLabel(pkg: PurchasesPackage): string | null {
+function trialLabel(pkg: PurchasesPackage, eligible: boolean): string | null {
+  if (!eligible) return null;
   const intro: any = (pkg.product as any).introPrice;
   if (!intro) return null;
   const price = intro.price;
@@ -51,8 +52,8 @@ function trialLabel(pkg: PurchasesPackage): string | null {
   return `${units} ${unitLabel}${plural} d'essai gratuit`;
 }
 
-function pkgSub(pkg: PurchasesPackage): string {
-  const trial = trialLabel(pkg);
+function pkgSub(pkg: PurchasesPackage, eligible: boolean): string {
+  const trial = trialLabel(pkg, eligible);
   if (trial) return `${trial} · puis ${pkg.product.priceString}`;
   if (pkg.packageType === "MONTHLY") return "Sans engagement";
   return pkg.product.priceString;
@@ -87,6 +88,7 @@ export default function Paywall() {
     isSubscribed,
     identityReady,
     identityError,
+    isTrialEligible,
     purchase,
     restore,
     isPurchasing,
@@ -161,9 +163,14 @@ export default function Paywall() {
     }
   };
 
+  // Headline the trial only while at least one plan still offers this customer
+  // one; a returning subscriber sees the plans without any free-trial promise.
+  const trialBadgeLabel =
+    packages.map((pkg) => trialLabel(pkg, isTrialEligible(pkg))).find(Boolean) ?? null;
+
   const ctaLabel = (() => {
     if (!selectedPkg) return "CONTINUER";
-    const trial = trialLabel(selectedPkg);
+    const trial = trialLabel(selectedPkg, isTrialEligible(selectedPkg));
     if (trial) return `ESSAI GRATUIT · PUIS ${selectedPkg.product.priceString}`;
     return `CONTINUER · ${selectedPkg.product.priceString}`;
   })();
@@ -183,10 +190,12 @@ export default function Paywall() {
         <Text style={styles.title}>Débloque tout le contenu sans filtre</Text>
         <Text style={styles.subtitle}>Le groupe est chaud. Passe au niveau supérieur et laisse Déclic tout révéler.</Text>
 
-        <View style={styles.trialBadge} testID="paywall-trial-badge">
-          <MaterialCommunityIcons name="gift-outline" size={18} color={colors.brand} />
-          <Text style={styles.trialBadgeText}>3 jours gratuits · annulable à tout moment</Text>
-        </View>
+        {trialBadgeLabel && (
+          <View style={styles.trialBadge} testID="paywall-trial-badge">
+            <MaterialCommunityIcons name="gift-outline" size={18} color={colors.brand} />
+            <Text style={styles.trialBadgeText}>{trialBadgeLabel} · annulable à tout moment</Text>
+          </View>
+        )}
 
         <View style={styles.perks}>
           {PERKS.map((p) => (
@@ -220,7 +229,7 @@ export default function Paywall() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.planTitle}>{pkgTitle(pkg)}</Text>
-                    <Text style={styles.planSub}>{pkgSub(pkg)}</Text>
+                    <Text style={styles.planSub}>{pkgSub(pkg, isTrialEligible(pkg))}</Text>
                     {isBest && savings && (
                       <Text style={styles.savingsText} testID="plan-annual-savings">{savings}</Text>
                     )}

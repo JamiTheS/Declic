@@ -2,10 +2,11 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { Platform } from "react-native";
-import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import Purchases, { INTRO_ELIGIBILITY_STATUS, LOG_LEVEL } from "react-native-purchases";
 import type { CustomerInfo, PurchasesPackage } from "react-native-purchases";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { storage } from "@/src/utils/storage";
@@ -81,6 +82,27 @@ function useSubscriptionState() {
     retry: false,
   });
 
+  // Whether THIS customer can still get the free trial. An introductory offer
+  // is consumable once per Apple ID per subscription group, while
+  // product.introPrice describes the offer as configured and says nothing about
+  // who may claim it - so a returning subscriber would otherwise be promised a
+  // trial and charged straight away.
+  const productIds = useMemo(
+    () =>
+      (offeringsQuery.data?.current?.availablePackages ?? [])
+        .map((p) => p.product.identifier)
+        .sort(),
+    [offeringsQuery.data],
+  );
+
+  const eligibilityQuery = useQuery({
+    queryKey: ["revenuecat", "intro-eligibility", productIds.join(",")],
+    queryFn: () => Purchases.checkTrialOrIntroductoryPriceEligibility(productIds),
+    enabled: rcEnabled && productIds.length > 0,
+    staleTime: 300 * 1000,
+    retry: false,
+  });
+
   // Bind a stable device identity so purchases are never anonymous.
   useEffect(() => {
     if (!rcEnabled) return;
@@ -152,6 +174,24 @@ function useSubscriptionState() {
 
   const packages = offeringsQuery.data?.current?.availablePackages ?? [];
 
+  // Only INELIGIBLE and NO_INTRO_OFFER_EXISTS hide the trial. UNKNOWN, and the
+  // window before the store answers, stay optimistic: hiding a trial the
+  // customer is actually entitled to would cost us the conversion, while the
+  // store sheet remains the source of truth either way.
+  const trialEligibility = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const [productId, value] of Object.entries(eligibilityQuery.data ?? {})) {
+      const status = (value as { status?: INTRO_ELIGIBILITY_STATUS })?.status;
+      map[productId] =
+        status !== INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_INELIGIBLE &&
+        status !== INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_NO_INTRO_OFFER_EXISTS;
+    }
+    return map;
+  }, [eligibilityQuery.data]);
+
+  const isTrialEligible = (pkg: PurchasesPackage) =>
+    trialEligibility[pkg.product.identifier] !== false;
+
   return {
     customerInfo: customerInfoQuery.data,
     offerings: offeringsQuery.data,
@@ -159,6 +199,7 @@ function useSubscriptionState() {
     isSubscribed,
     identityReady,
     identityError,
+    isTrialEligible,
     rcEnabled,
     simulatedStore,
     isLoading: customerInfoQuery.isLoading || offeringsQuery.isLoading,
