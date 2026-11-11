@@ -62,8 +62,8 @@ class Card(BaseModel):
     texte_b: Optional[str] = None          # for cash-ou-cash (second option)
     variante: Optional[str] = None         # action-verite: 'action' | 'verite'
     vibe: Optional[str] = None             # content vibe (Fun / Découverte / Sans filtre / Hot)
-    gage: str = "Bois une gorgée"
-    alternative: str = "Révèle un secret de plus"
+    gage: str = "Relève un mini-défi choisi par le groupe."
+    alternative: str = ""
     intensite: int = 1                     # 1..5
     tags_theme: List[str] = Field(default_factory=lambda: ["general"])
     packs: List[str] = Field(default_factory=list)  # presets (Intég, Coloc, Entre meufs, Couples…)
@@ -81,8 +81,8 @@ class CardCreate(BaseModel):
     texte_b: Optional[str] = None
     variante: Optional[str] = None
     vibe: Optional[str] = None
-    gage: str = "Bois une gorgée"
-    alternative: str = "Révèle un secret de plus"
+    gage: str = "Relève un mini-défi choisi par le groupe."
+    alternative: str = ""
     intensite: int = 1
     tags_theme: List[str] = Field(default_factory=lambda: ["general"])
     packs: List[str] = Field(default_factory=list)
@@ -404,8 +404,8 @@ async def import_csv(payload: CsvImport, _: bool = Depends(require_admin)):
                 texte_b=texte_b,
                 variante=norm.get("variante") or None,
                 vibe=norm.get("vibe") or norm.get("ambiance") or None,
-                gage=norm.get("gage") or "Bois une gorgée",
-                alternative=norm.get("alternative") or norm.get("alternative_sans_alcool") or "Révèle un secret de plus",
+                gage=norm.get("gage") or "Relève un mini-défi choisi par le groupe.",
+                alternative=norm.get("alternative") or norm.get("alternative_sans_alcool") or "",
                 intensite=_to_int(norm.get("intensite"), 1),
                 tags_theme=_to_list(norm.get("tags_theme")) or ["general"],
                 packs=_to_list(norm.get("packs")),
@@ -473,8 +473,8 @@ def _map_airtable_record(rec: dict) -> Optional[dict]:
             texte_b=(f.get("texte_b") or None),
             variante=(f.get("variante") or None),
             vibe=(f.get("vibe") or None),
-            gage=(f.get("gage") or "Bois une gorgée"),
-            alternative=(f.get("alternative") or "Révèle un secret de plus"),
+            gage=(f.get("gage") or "Relève un mini-défi choisi par le groupe."),
+            alternative=(f.get("alternative") or ""),
             intensite=_to_int(f.get("intensite"), 1),
             tags_theme=_to_list(f.get("tags_theme")) or ["general"],
             packs=_to_list(f.get("packs")),
