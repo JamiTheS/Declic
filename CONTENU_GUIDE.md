@@ -15,8 +15,8 @@ Il s'applique à Airtable, Google Sheets ET à l'import CSV du back-office.
 | `variante` | Seulement `action-verite` | `action` ou `verite`. |
 | `intensite` | conseillé | 1 (soft) → 5 (hot). Sert au moteur d'escalade et au thermomètre. |
 | `vibe` | conseillé | `Découverte`, `Fun`, `Sans filtre` ou `Hot`. |
-| `gage` | optionnel | Le gage si la personne refuse. Défaut : "Bois une gorgée". |
-| `alternative` | optionnel | L'alternative SANS alcool (mode sans alcool). Défaut fourni. |
+| `gage` | optionnel | Le gage si la personne refuse : un défi, une révélation ou un mini-challenge. Défaut : "Relève un mini-défi choisi par le groupe." |
+| `alternative` | obsolète | Laisser vide (ancien champ du mode sans alcool, supprimé). |
 | `tags_theme` | optionnel | Thèmes, séparés par `|`. Ex: `amitié|absurde`. |
 | `packs` | optionnel | Presets soirée, séparés par `|`. Ex: `Coloc|Intég|Couples`. |
 | `premium` | optionnel | `oui`/`non` (ou true/false, 1/0). Réservé aux abonnés. |
@@ -65,8 +65,11 @@ Phrase complète, plutôt intense. Mets `premium` = `oui`, `age18` = `oui`, `int
 ---
 
 ## Rappel conformité
-L'alcool n'est qu'une option de gage : fournis toujours une `alternative` sans alcool.
+**Zéro alcool** (rejet Apple 4.3(b)) : aucun gage à boire, aucune mention d'alcool, de gorgée ou de verre.
+Contenu Hot **suggestif, jamais explicite** : aucune pratique décrite, aucun accessoire, rien qui implique des mineurs.
 Aucune question n'est validée en dessous de 18 ans (l'app est 18+).
+Les modes `imposteur` (`variante` = `mots`/`questions`, `texte` = secret des civils, `texte_b` = secret de l'imposteur)
+et `confession` (thèmes d'inspiration) existent aussi.
 
 ---
 
